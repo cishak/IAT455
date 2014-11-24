@@ -5,23 +5,15 @@ var renderer;
 var geometry;
 var material;
 var meshes = [];
-var SPHERE_WIDTH = 20;
 
-var bars = 64;
-var barWidth = 8;
-
-var PARTICLES_COUNT = 15;
-var particles;
-var particlesMaterial;
-var particlesHue = 0;
+var BIN_COUNT = 512;
+var beatThresh = 0;
+var onBeat = false;
 
 var audioContext = new AudioContext();
-var SAMPLES = 128;
+var SAMPLES = 1024;
 var fft =  audioContext.createAnalyser();
 fft.fftSize = SAMPLES;
-
-// var fft =  audioContext.createAnalyser();
-// fft.fftSize = SAMPLES;
 
 // Will contain amplitude data of our harmonics.
 var buffer = new Uint8Array(SAMPLES);
@@ -33,16 +25,15 @@ var vertex;
 // Clock to keep track of time
 var clock = new THREE.Clock();
 
+var sceneWidth = window.innerWidth;
+var sceneHeight = window.innerHeight;
+var leftMost = -(sceneWidth / 2);
+var topMost = -(sceneHeight / 2);
+
 // Scene setup
 function init() {
   freqByteData = new Uint8Array(fft.frequencyBinCount);
   timeByteData = new Uint8Array(fft.frequencyBinCount);
-
-
-  var sceneWidth = window.innerWidth;
-  var sceneHeight = window.innerHeight;
-  var leftMost = -(sceneWidth / 2);
-  var topMost = -(sceneHeight / 2);
 
   // Initialize renderer
   renderer = new THREE.WebGLRenderer({
@@ -50,29 +41,29 @@ function init() {
   });
 
   // Set size of renderer
-  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setSize(sceneWidth, sceneHeight);
   renderer.setClearColor(0xffffff, 1);
   renderer.autoClear = false;
   document.body.appendChild( renderer.domElement );
 
   // Allow for window resizing
   window.addEventListener( 'resize', function () {
-    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.aspect = sceneWidth / sceneHeight;
     camera.updateProjectionMatrix();
  
-    renderer.setSize( window.innerWidth, window.innerHeight );
+    renderer.setSize( sceneWidth, sceneHeight );
   }, false );
 
   // Initialize camera
   camera = new THREE.PerspectiveCamera(
     40,
-    window.innerWidth / window.innerHeight,
+    sceneWidth / sceneHeight,
     1,
     100000
   );
 
   // The position of the camera in our scene.
-  camera.position.z = 2000;
+  camera.position.z = 1000;
   camera.position.y = 0;
 
   // Initialize scene
@@ -81,29 +72,34 @@ function init() {
   THREE.AdditiveBlending = 2;
 
 
-  for (var i = 0; i < 10 ; i++) {
+  for (var i = 0; i < 6 ; i++) {
     var geometry = new THREE.Geometry();
-    x = window.innerWidth/2;
-    y = window.innerHeight/2;
-    z = 1;
-    vertex = new THREE.Vector3(x, y, z);
 
-    geometry.vertices.push(vertex);
+    var v1 = new THREE.Vector3(-30, 0, 0);
+    var v2 = new THREE.Vector3(0, 60, 0);
+    var v3 = new THREE.Vector3(30, 0, 0);
 
-    var material = new THREE.MeshNormalMaterial({
+    geometry.vertices.push(v1);
+    geometry.vertices.push(v2);
+    geometry.vertices.push(v3);
+
+    geometry.faces.push(new THREE.Face3(0, 1, 2));
+
+    var material = new THREE.MeshBasicMaterial({
       color: 0xFFFFFF,
       blending: THREE.AdditiveBlending,
-      opacity: 0.5,
-      transparent: true
+      opacity: 1,
+      transparent: true,
+      wireframe: true
     });
     var mesh = new THREE.Mesh(geometry, material);
 
     // Set position of spheres on canvas
-    mesh.position.x = i;
+    // mesh.position.x = Math.random() * sceneWidth + leftMost;
+    // mesh.position.y = Math.random() * sceneHeight + topMost;
 
-    mesh.position.y = Math.random() * sceneHeight + topMost;
+    mesh.rotation.z = Math.sin(Math.PI) * i;
 
-    // Add sphere meshes to array and scene
     meshes.push(mesh);
     scene.add(mesh);
   }
@@ -150,6 +146,7 @@ function init() {
 }
 
 var theta = 0;
+var scaleFactor = 0;
 
 function animate() {
   fft.getByteFrequencyData(freqByteData);
@@ -162,36 +159,73 @@ function animate() {
 
   theta += time * 0.1;
 
-  
-  // for (var i = 0; i < meshes.length; i++) {
- 
-  //   // Assign 3D coordinates of particles
-  //   x = i;
-  //   y = freqByteData[i];
-  //   z = 10;
- 
-  //   // Push coordinates to vector
-  //   var vertex = new THREE.Vector3(x, y, z);
-  //   meshes[i].vertices.push( vertex );
-  // }
+  // scaleFactor += time * 2;
+
+
+  // Determine volume
+  var volume = 0;
+  for (var i = 0; i < BIN_COUNT; i++) {
+    volume += freqByteData[i];
+  }
+  volAvg = volume / BIN_COUNT;
+  // console.log(volAvg);
 
 
   for (var i = 0; i < meshes.length; i++) {
-      // Scale spheres based on audio input
-      // meshes[i].scale.x = freqByteData[i]/30;
-      meshes[i].scale.y = freqByteData[i]/30;
-      // meshes[i].scale.z = freqByteData[i]/30;
+      // Scale triangles based on audio input
+      meshes[i].scale.y = volAvg/30;
+      meshes[i].scale.x = volAvg/30;
 
-      // Move spheres around window based on audio input
-      // meshes[i].position.z = freqByteData[i];
-      // meshes[i].position.y = Math.sin(theta+i*5) * window.innerHeight/3;
-      meshes[i].position.x += 1;
+      meshes[i].position.z = 20*Math.sin(theta) + 0;
 
-      console.log(meshes[i]);
 
-      // Alter light intensity and colour
-      directionalLight.intensity2 = meshes[i].position.z/200;   
-      directionalLight.color.setRGB(0,0,(freqByteData[i]/70)%1);
+      // Detect a beat DOESN'T REALLY WORK PROPERLY
+      // if (volAvg > beatThresh) {
+      //   onBeat = true;
+      //   beatThresh = volAvg * 1.1;
+      // } else {
+      //   onBeat = false;
+      //   beatThresh *= 0.9;
+      // }
+      // console.log(beatThresh);
+
+      if (volAvg > 40) {
+        var newTriangle = new THREE.Geometry();
+
+        var v1 = new THREE.Vector3(-30, 0, 0);
+        var v2 = new THREE.Vector3(0, 60, 0);
+        var v3 = new THREE.Vector3(30, 0, 0);
+
+        newTriangle.vertices.push(v1);
+        newTriangle.vertices.push(v2);
+        newTriangle.vertices.push(v3);
+
+        newTriangle.faces.push(new THREE.Face3(0, 1, 2));
+
+        var material = new THREE.MeshBasicMaterial({
+          color: 0xFFFFFF,
+          blending: THREE.AdditiveBlending,
+          opacity: 0.5,
+          transparent: true,
+          wireframe: true
+        });
+        var newMesh = new THREE.Mesh(newTriangle, material);
+
+        // Set position of triangles on canvas
+        newMesh.position.x = Math.random() * sceneWidth + leftMost;
+        newMesh.position.y = Math.random() * sceneHeight + topMost;
+        // newMesh.scale.x += theta;
+        // newMesh.scale.y += theta;
+
+        camera.position.z += 4;
+
+        sceneWidth += 10;
+        sceneHeight += 10;
+        leftMost = -(sceneWidth / 2);
+        topMost = -(sceneHeight / 2);
+
+        scene.add(newMesh);
+      }
   }
   camera.lookAt(scene.position);
 
