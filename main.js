@@ -189,6 +189,8 @@ function animate() {
       // }
       // console.log(beatThresh);
 
+      // if the volume is above 40, there's a beat, so move the camera back 
+      // and generate new triangles
       if (volAvg > 40) {
         var newTriangle = new THREE.Geometry();
 
