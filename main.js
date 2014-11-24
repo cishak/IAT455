@@ -7,12 +7,8 @@ var material;
 var meshes = [];
 
 var BIN_COUNT = 512;
-var beatThresh = 30;
+var beatThresh = 0;
 var onBeat = false;
-var beatTime = 0;
-var beatHold = 1;
-var beatcount = 0;
-var change = 0;
 
 var audioContext = new AudioContext();
 var SAMPLES = 1024;
@@ -90,12 +86,11 @@ function init() {
     geometry.faces.push(new THREE.Face3(0, 1, 2));
 
     var material = new THREE.MeshBasicMaterial({
-      color: 0xf35149,
-      // blending: THREE.AdditiveBlending,
+      color: 0xFFFFFF,
+      blending: THREE.AdditiveBlending,
       opacity: 1,
-      // transparent: true,
-      wireframe: true,
-      wireframeLinewidth: 5
+      transparent: true,
+      wireframe: true
     });
     var mesh = new THREE.Mesh(geometry, material);
 
@@ -164,10 +159,8 @@ function animate() {
 
   theta += time * 0.1;
 
-  change++;
   // scaleFactor += time * 2;
-  // camera.position.z -= 1;
-  // camera.rotation.y = 90 * Math.PI / 180;
+
 
   // Determine volume
   var volume = 0;
@@ -178,14 +171,26 @@ function animate() {
   // console.log(volAvg);
 
 
-  if (change % 3 == 0) {
-    // console.log(change%2);
-    if (volAvg > 40) {
-      beatcount++;
-      console.log(beatcount);
+  for (var i = 0; i < meshes.length; i++) {
+      // Scale triangles based on audio input
+      meshes[i].scale.y = volAvg/30;
+      meshes[i].scale.x = volAvg/30;
+
+      meshes[i].position.z = 20*Math.sin(theta) + 0;
 
 
+      // Detect a beat DOESN'T REALLY WORK PROPERLY
+      // if (volAvg > beatThresh) {
+      //   onBeat = true;
+      //   beatThresh = volAvg * 1.1;
+      // } else {
+      //   onBeat = false;
+      //   beatThresh *= 0.9;
+      // }
+      // console.log(beatThresh);
 
+      // if the volume is above 40, there's a beat, so move the camera back 
+      // and generate new triangles
       if (volAvg > 40) {
         var newTriangle = new THREE.Geometry();
 
@@ -199,15 +204,14 @@ function animate() {
 
         newTriangle.faces.push(new THREE.Face3(0, 1, 2));
 
-        var newMaterial = new THREE.MeshBasicMaterial({
-          color: 0xf35149,
-          // blending: THREE.AdditiveBlending,
-          opacity: 0.6,
-          // transparent: true,
-          wireframe: true,
-          wireframeLinewidth: 5
+        var material = new THREE.MeshBasicMaterial({
+          color: 0xFFFFFF,
+          blending: THREE.AdditiveBlending,
+          opacity: 0.5,
+          transparent: true,
+          wireframe: true
         });
-        var newMesh = new THREE.Mesh(newTriangle, newMaterial);
+        var newMesh = new THREE.Mesh(newTriangle, material);
 
         // Set position of triangles on canvas
         newMesh.position.x = Math.random() * sceneWidth + leftMost;
@@ -217,52 +221,13 @@ function animate() {
 
         camera.position.z += 4;
 
-        sceneWidth += 5;
-        sceneHeight += 5;
+        sceneWidth += 10;
+        sceneHeight += 10;
         leftMost = -(sceneWidth / 2);
         topMost = -(sceneHeight / 2);
 
         scene.add(newMesh);
       }
-    }
-
-    // // Detect a beat
-    // if (volAvg > beatThresh) {
-    //   beatThresh = volAvg * 1.5;
-    //   beatHold = 0;
-
-    //   // camera.position.z += 4;
-
-    //   beatcount ++
-    //   console.log(beatThresh);
-      
-    // } else {
-    //   if (beatTime <= beatHold) {
-    //     beatTime ++;
-    //     // beatThresh --;
-    //     console.log("huh");
-    //   } else {
-    //     // beatTime *= 0.9;
-    //     beatThresh *= 0.5;
-    //   }
-    // }
-  }
-
-
-  for (var i = 0; i < meshes.length; i++) {
-      // Scale triangles based on audio input
-      meshes[i].scale.y = volAvg/30;
-      meshes[i].scale.x = volAvg/30;
-
-      meshes[i].position.z = 20*Math.sin(theta) + 0;
-
-
-      
-
-
-
-
-      
   }
   camera.lookAt(scene.position);
 
