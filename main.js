@@ -7,12 +7,15 @@ var material;
 var meshes = [];
 
 var BIN_COUNT = 512;
-var beatThresh = 30;
+var beatThresh = 1;
 var onBeat = false;
 var beatTime = 0;
 var beatHold = 1;
 var beatcount = 0;
 var change = 0;
+
+var beatVals = [];
+// var sum = 0;
 
 var audioContext = new AudioContext();
 var SAMPLES = 1024;
@@ -178,91 +181,119 @@ function animate() {
   // console.log(volAvg);
 
 
-  if (change % 3 == 0) {
-    // console.log(change%2);
-    if (volAvg > 40) {
-      beatcount++;
-      console.log(beatcount);
+  beatVals.unshift(volAvg);
 
 
 
-      if (volAvg > 40) {
-        var newTriangle = new THREE.Geometry();
+  // var start = new Date().getTime();
+  // for (var i = 0; i < 1e7; i++) {
+  // if (((new Date().getTime() - start) > 200) && (beatVals.length > 10)){
+  //     break;
+  //   }
+  // }
+  // console.log("waited");
 
-        var v1 = new THREE.Vector3(-30, 0, 0);
-        var v2 = new THREE.Vector3(0, 60, 0);
-        var v3 = new THREE.Vector3(30, 0, 0);
 
-        newTriangle.vertices.push(v1);
-        newTriangle.vertices.push(v2);
-        newTriangle.vertices.push(v3);
+  if ((change % 10 == 0) && (beatVals.length > 10)) {
+    beatVals.length = 10;
+    beatVals.pop();
 
-        newTriangle.faces.push(new THREE.Face3(0, 1, 2));
-
-        var newMaterial = new THREE.MeshBasicMaterial({
-          color: 0xf35149,
-          // blending: THREE.AdditiveBlending,
-          opacity: 0.6,
-          // transparent: true,
-          wireframe: true,
-          wireframeLinewidth: 5
-        });
-        var newMesh = new THREE.Mesh(newTriangle, newMaterial);
-
-        // Set position of triangles on canvas
-        newMesh.position.x = Math.random() * sceneWidth + leftMost;
-        newMesh.position.y = Math.random() * sceneHeight + topMost;
-        // newMesh.scale.x += theta;
-        // newMesh.scale.y += theta;
-
-        camera.position.z += 4;
-
-        sceneWidth += 5;
-        sceneHeight += 5;
-        leftMost = -(sceneWidth / 2);
-        topMost = -(sceneHeight / 2);
-
-        scene.add(newMesh);
-      }
+    var sum = 0;
+    for (var i = 0; i < beatVals.length; i++) {
+      sum += beatVals[i];
     }
 
-    // // Detect a beat
-    // if (volAvg > beatThresh) {
-    //   beatThresh = volAvg * 1.5;
-    //   beatHold = 0;
+    var beatAvg = sum/beatVals.length;
+    var start = new Date().getTime();
 
-    //   // camera.position.z += 4;
 
-    //   beatcount ++
-    //   console.log(beatThresh);
-      
-    // } else {
-    //   if (beatTime <= beatHold) {
-    //     beatTime ++;
-    //     // beatThresh --;
-    //     console.log("huh");
-    //   } else {
-    //     // beatTime *= 0.9;
-    //     beatThresh *= 0.5;
-    //   }
-    // }
+    if (beatAvg > beatThresh) {
+      beatThresh = beatAvg;
+      console.log("beat: " + beatThresh);
+
+    } else {
+      beatThresh *= 0.98; // gravity on threshold
+    }
   }
+
+  
+
+  // if (change % 3 == 0) {
+  //   // console.log(change%2);
+  //   if (volAvg > 40) {
+  //     beatcount++;
+  //     console.log(beatcount);
+
+
+
+  //     if (volAvg > 40) {
+  //       var newTriangle = new THREE.Geometry();
+
+  //       var v1 = new THREE.Vector3(-30, 0, 0);
+  //       var v2 = new THREE.Vector3(0, 60, 0);
+  //       var v3 = new THREE.Vector3(30, 0, 0);
+
+  //       newTriangle.vertices.push(v1);
+  //       newTriangle.vertices.push(v2);
+  //       newTriangle.vertices.push(v3);
+
+  //       newTriangle.faces.push(new THREE.Face3(0, 1, 2));
+
+  //       var newMaterial = new THREE.MeshBasicMaterial({
+  //         color: 0xf35149,
+  //         // blending: THREE.AdditiveBlending,
+  //         opacity: 0.6,
+  //         // transparent: true,
+  //         wireframe: true,
+  //         wireframeLinewidth: 5
+  //       });
+  //       var newMesh = new THREE.Mesh(newTriangle, newMaterial);
+
+  //       // Set position of triangles on canvas
+  //       newMesh.position.x = Math.random() * sceneWidth + leftMost;
+  //       newMesh.position.y = Math.random() * sceneHeight + topMost;
+  //       // newMesh.scale.x += theta;
+  //       // newMesh.scale.y += theta;
+
+  //       camera.position.z += 4;
+
+  //       sceneWidth += 5;
+  //       sceneHeight += 5;
+  //       leftMost = -(sceneWidth / 2);
+  //       topMost = -(sceneHeight / 2);
+
+  //       scene.add(newMesh);
+  //     }
+  //   }
+
+  //   // // Detect a beat
+  //   // if (volAvg > beatThresh) {
+  //   //   beatThresh = volAvg * 1.5;
+  //   //   beatHold = 0;
+
+  //   //   // camera.position.z += 4;
+
+  //   //   beatcount ++
+  //   //   console.log(beatThresh);
+      
+  //   // } else {
+  //   //   if (beatTime <= beatHold) {
+  //   //     beatTime ++;
+  //   //     // beatThresh --;
+  //   //     console.log("huh");
+  //   //   } else {
+  //   //     // beatTime *= 0.9;
+  //   //     beatThresh *= 0.5;
+  //   //   }
+  //   // }
+  // }
 
 
   for (var i = 0; i < meshes.length; i++) {
       // Scale triangles based on audio input
       meshes[i].scale.y = volAvg/30;
       meshes[i].scale.x = volAvg/30;
-
-      meshes[i].position.z = 20*Math.sin(theta) + 0;
-
-
-      
-
-
-
-
-      
+      meshes[i].position.z = 20*Math.sin(theta) + 0;   
   }
   camera.lookAt(scene.position);
 
