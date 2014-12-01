@@ -7,6 +7,7 @@ var material;
 var triangleMeshes = [];
 var circleMeshes = [];
 var boxMeshes = [];
+var triangleFractal = [];
 
 var BIN_COUNT = 512;
 var beatThresh = 1;
@@ -111,7 +112,7 @@ function init() {
     // mesh.position.x = Math.random() * sceneWidth + leftMost;
     // mesh.position.y = Math.random() * sceneHeight + topMost;
 
-    triangleMesh.rotation.z = Math.sin(Math.PI) * i;
+    triangleMesh.rotation.z = Math.sin(Math.PI) ;
 
     triangleMeshes.push(triangleMesh);
     scene.add(triangleMesh);
@@ -149,9 +150,10 @@ function init() {
     boxMesh.position.y = -150;
     boxMesh.position.x = 150;
 
-
     boxMeshes.push(boxMesh);
     scene.add(boxMesh);
+
+    tripinski(200,200);
   }
 
   // Ambient lighting
@@ -197,6 +199,80 @@ function init() {
 
 var theta = 0;
 var scaleFactor = 0;
+
+
+function tripinski(h,w) {
+    //first triangle
+    var xa = w/2;
+    var ya = 0;
+    var xb = 0;
+    var yb = h;
+    var xc = w;
+    var yc = h;
+    drawTriangle(xa,ya,xb,yb,xc,yc);
+    var top = h/2;
+    var left = w/4;
+    triangle(h/2,w/2,top,left);
+}
+
+
+function triangle(h,w,top,left) {
+    var xa = left;
+    var ya = top;
+    var xb = left+w;
+    var yb = top;
+    var xc = left+(w/2);
+    var yc = top+h;
+
+    if (w > 1) { 
+        //draw the current triangle
+        drawTriangle(xa,ya,xb,yb,xc,yc);
+        //half the size and determine the top/left for the next
+        //series of triangles and call the function on those
+        var new_h = h/2;
+        var new_w = w/2;
+        var top_1 = top + new_h;
+        var left_1 = left - (new_w/2);
+        var top_2 = top - new_h;
+        var left_2 = left + (new_w/2);
+        var top_3 = top + new_h;
+        var left_3 = left + w - (new_w/2);
+        triangle(new_h,new_w,top_1,left_1);
+        triangle(new_h,new_w,top_2,left_2);
+        triangle(new_h,new_w,top_3,left_3);
+    }
+}
+
+
+function drawTriangle(xa, ya, xb, yb, xc, yc) {
+    var triangleGeometry = new THREE.Geometry();
+
+    var v1 = new THREE.Vector3(xa,ya,0);
+    var v2 = new THREE.Vector3(xb,yb,0);
+    var v3 = new THREE.Vector3(xc,yc,0);
+
+    triangleGeometry.vertices.push(v1);
+    triangleGeometry.vertices.push(v2);
+    triangleGeometry.vertices.push(v3);
+
+    triangleGeometry.faces.push(new THREE.Face3(0, 1, 2));
+
+    var triangleMaterial = new THREE.MeshBasicMaterial({
+      color: 0xf35149,
+      // blending: THREE.AdditiveBlending,
+      opacity: 1,
+      wireframe: true,
+      wireframeLinewidth: 3
+    });
+
+    var triangleMesh = new THREE.Mesh(triangleGeometry, triangleMaterial);
+
+    // triangleMesh.rotation.z = Math.sin(Math.PI) ;
+
+    triangleFractal.push(triangleMesh);
+    scene.add(triangleMesh);
+}
+
 
 function animate() {
   fft.getByteFrequencyData(freqByteData);
