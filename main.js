@@ -26,6 +26,7 @@ var audioContext = new AudioContext();
 var SAMPLES = 1024;
 var fft =  audioContext.createAnalyser();
 fft.fftSize = SAMPLES;
+var volAvg;
 
 // Will contain amplitude data of our harmonics.
 var buffer = new Uint8Array(SAMPLES);
@@ -153,8 +154,11 @@ function init() {
     boxMeshes.push(boxMesh);
     scene.add(boxMesh);
 
-    tripinski(100,100);
+    // tripinski(100,100);
+    
   }
+
+  // console.log(volAvg);
 
   // Ambient lighting
   var ambientLight = new THREE.AmbientLight(0x333333);
@@ -201,7 +205,7 @@ var theta = 0;
 var scaleFactor = 0;
 
 
-function tripinski(h,w) {
+function tripinski(h,w,volAvg) {
     //first triangle
     var xa = w/2;
     var ya = 0;
@@ -212,34 +216,47 @@ function tripinski(h,w) {
     drawTriangle(xa,ya,xb,yb,xc,yc);
     var top = h/2;
     var left = w/4;
-    triangle(h/2,w/2,top,left);
+    triangle(h/2,w/2,top,left,volAvg);
+    // console.log("vol tripinski: " + volAvg);
 }
 
 
-function triangle(h,w,top,left) {
+function triangle(h,w,top,left,volAvg) {
     var xa = left;
     var ya = top;
     var xb = left+w;
     var yb = top;
     var xc = left+(w/2);
     var yc = top+h;
+    // console.log(volAvg);
 
     if (w > 10) { 
         //draw the current triangle
-        drawTriangle(xa,ya,xb,yb,xc,yc);
-        //half the size and determine the top/left for the next
-        //series of triangles and call the function on those
-        var new_h = h/2;
-        var new_w = w/2;
-        var top_1 = top + new_h;
-        var left_1 = left - (new_w/2);
-        var top_2 = top - new_h;
-        var left_2 = left + (new_w/2);
-        var top_3 = top + new_h;
-        var left_3 = left + w - (new_w/2);
-        triangle(new_h,new_w,top_1,left_1);
-        triangle(new_h,new_w,top_2,left_2);
-        triangle(new_h,new_w,top_3,left_3);
+        if(volAvg > 20) {
+          drawTriangle(xa,ya,xb,yb,xc,yc);
+          //half the size and determine the top/left for the next
+          //series of triangles and call the function on those
+          var new_h = h/2;
+          var new_w = w/2;
+          var top_1 = top + new_h;
+          var left_1 = left - (new_w/2);
+          var top_2 = top - new_h;
+          var left_2 = left + (new_w/2);
+          var top_3 = top + new_h;
+          var left_3 = left + w - (new_w/2);
+          if(volAvg > 40) {
+            triangle(new_h,new_w,top_1,left_1,volAvg);
+          }
+
+          if(volAvg > 60) {
+            triangle(new_h,new_w,top_2,left_2,volAvg);
+          }
+
+          if(volAvg > 80) {
+            triangle(new_h,new_w,top_3,left_3,volAvg);
+          }
+        }
+        
     }
 }
 
@@ -267,14 +284,13 @@ function drawTriangle(xa, ya, xb, yb, xc, yc) {
 
     var triangleMesh = new THREE.Mesh(triangleGeometry, triangleMaterial);
 
-    // triangleMesh.rotation.z = Math.sin(Math.PI) ;
-
     triangleFractal.push(triangleMesh);
     scene.add(triangleMesh);
 }
 
 
 function animate() {
+  // console.log(volAvg);
   fft.getByteFrequencyData(freqByteData);
   fft.getByteTimeDomainData(timeByteData);
 
@@ -327,7 +343,48 @@ function animate() {
     if (beatAvg > beatThresh) {
       beatThresh = beatAvg;
       // console.log("beat: " + beatThresh);
-      // console.log(maxValue);
+      // console.log("vol animate: " + volAvg);
+      tripinski(100,100,volAvg);
+
+      // if (volAvg > 40) {
+      //   var newTriangle = new THREE.Geometry();
+
+      //   var v1 = new THREE.Vector3(-30, 0, 0);
+      //   var v2 = new THREE.Vector3(0, 60, 0);
+      //   var v3 = new THREE.Vector3(30, 0, 0);
+
+      //   newTriangle.vertices.push(v1);
+      //   newTriangle.vertices.push(v2);
+      //   newTriangle.vertices.push(v3);
+
+      //   newTriangle.faces.push(new THREE.Face3(0, 1, 2));
+
+      //   var newMaterial = new THREE.MeshBasicMaterial({
+      //     color: 0xf35149,
+      //     // blending: THREE.AdditiveBlending,
+      //     opacity: 0.6,
+      //     // transparent: true,
+      //     wireframe: true,
+      //     wireframeLinewidth: 5
+      //   });
+      //   var newMesh = new THREE.Mesh(newTriangle, newMaterial);
+
+      //   // Set position of triangles on canvas
+      //   newMesh.position.x = Math.random() * sceneWidth + leftMost;
+      //   newMesh.position.y = Math.random() * sceneHeight + topMost;
+      //   // newMesh.scale.x += theta;
+      //   // newMesh.scale.y += theta;
+
+      //   camera.position.z += 4;
+
+      //   sceneWidth += 5;
+      //   sceneHeight += 5;
+      //   leftMost = -(sceneWidth / 2);
+      //   topMost = -(sceneHeight / 2);
+
+      //   scene.add(newMesh);
+      // }
+    
 
     } else {
       beatThresh *= 0.98; // gravity on threshold
@@ -460,8 +517,24 @@ function animate() {
       // Scale triangles based on audio input
       triangleMeshes[i].scale.y = volAvg/30;
       triangleMeshes[i].scale.x = volAvg/30;
-      // triangleMeshes[i].position.z = 20*Math.sin(theta) + 0;   
+      // triangleMeshes[i].position.z = 20*Math.sin(theta) + 0;  
+
   }
+
+  // for (var i = 0; i < triangleFractal.length; i++) {
+      // Scale triangles based on audio input 
+
+      // triangleFractal[i].scale.y = volAvg/10;
+      // triangleFractal[i].scale.x = volAvg/10;
+
+      // if(volAvg < 50) {
+          // tripinski(volAvg*2,volAvg*2);
+      // }
+      // if the volAvg is small, draw less triangle
+      //   if the volavg is big, draw more triangle
+  // }
+
+
   camera.lookAt(scene.position);
 
   renderer.render(scene, camera);
