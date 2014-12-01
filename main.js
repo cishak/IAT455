@@ -153,7 +153,7 @@ function init() {
     boxMeshes.push(boxMesh);
     scene.add(boxMesh);
 
-    tripinski(200,200);
+    tripinski(100,100);
   }
 
   // Ambient lighting
@@ -224,7 +224,7 @@ function triangle(h,w,top,left) {
     var xc = left+(w/2);
     var yc = top+h;
 
-    if (w > 1) { 
+    if (w > 10) { 
         //draw the current triangle
         drawTriangle(xa,ya,xb,yb,xc,yc);
         //half the size and determine the top/left for the next
@@ -296,12 +296,8 @@ function animate() {
     volume += freqByteData[i];
   }
   volAvg = volume / BIN_COUNT;
-  // console.log(volAvg);
-
 
   beatVals.unshift(volAvg);
-
-
 
   // var start = new Date().getTime();
   // for (var i = 0; i < 1e7; i++) {
@@ -318,17 +314,11 @@ function animate() {
     // console.log(beatVals);
     beatVals.pop();
 
-
     var sum = 0;
-
-    
-    
 
     for (var i = 0; i < beatVals.length; i++) {
       sum += beatVals[i];
     }
-
-    
 
     var beatAvg = sum/beatVals.length;
     var start = new Date().getTime();
@@ -451,7 +441,7 @@ function animate() {
       if(maxValue > 50) {
           // circleMeshes[i].rotation.x += 0.05;
           // circleMeshes[i].rotation.y += 0.05;
-          console.log("maxvalue:" + maxValue);
+          // console.log("maxvalue:" + maxValue);
           circleMeshes[i].rotation.z +=  0.03;
       }
 
@@ -460,7 +450,7 @@ function animate() {
       if(minValue < 30) {
           // circleMeshes[i].rotation.x += 0.05;
           // circleMeshes[i].rotation.y += 0.05;
-          console.log("minValue:" + minValue);
+          // console.log("minValue:" + minValue);
           boxMeshes[i].rotation.z -=  0.01;
       }
   }
