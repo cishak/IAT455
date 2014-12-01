@@ -4,7 +4,9 @@ var renderer;
 
 var geometry;
 var material;
-var meshes = [];
+var triangleMeshes = [];
+var circleMeshes = [];
+var boxMeshes = [];
 
 var BIN_COUNT = 512;
 var beatThresh = 1;
@@ -16,6 +18,8 @@ var change = 0;
 
 var beatVals = [];
 // var sum = 0;
+var maxValue;
+var minValue;
 
 var audioContext = new AudioContext();
 var SAMPLES = 1024;
@@ -78,38 +82,76 @@ function init() {
 
   THREE.AdditiveBlending = 2;
 
-
+  
   for (var i = 0; i < 6 ; i++) {
-    var geometry = new THREE.Geometry();
+    // draw triangle
+    var triangleGeometry = new THREE.Geometry();
 
     var v1 = new THREE.Vector3(-30, 0, 0);
     var v2 = new THREE.Vector3(0, 60, 0);
     var v3 = new THREE.Vector3(30, 0, 0);
 
-    geometry.vertices.push(v1);
-    geometry.vertices.push(v2);
-    geometry.vertices.push(v3);
+    triangleGeometry.vertices.push(v1);
+    triangleGeometry.vertices.push(v2);
+    triangleGeometry.vertices.push(v3);
 
-    geometry.faces.push(new THREE.Face3(0, 1, 2));
+    triangleGeometry.faces.push(new THREE.Face3(0, 1, 2));
 
-    var material = new THREE.MeshBasicMaterial({
+    var triangleMaterial = new THREE.MeshBasicMaterial({
       color: 0xf35149,
       // blending: THREE.AdditiveBlending,
       opacity: 1,
       // transparent: true,
       wireframe: true,
-      wireframeLinewidth: 5
+      wireframeLinewidth: 3
     });
-    var mesh = new THREE.Mesh(geometry, material);
+    var triangleMesh = new THREE.Mesh(triangleGeometry, triangleMaterial);
 
     // Set position of spheres on canvas
     // mesh.position.x = Math.random() * sceneWidth + leftMost;
     // mesh.position.y = Math.random() * sceneHeight + topMost;
 
-    mesh.rotation.z = Math.sin(Math.PI) * i;
+    triangleMesh.rotation.z = Math.sin(Math.PI) * i;
 
-    meshes.push(mesh);
-    scene.add(mesh);
+    triangleMeshes.push(triangleMesh);
+    scene.add(triangleMesh);
+
+    // draw circle
+    var circleMaterial = new THREE.MeshBasicMaterial({
+      color: 0x997825,
+      wireframe: true,
+      wireframeLinewidth: 3,
+      opacity: 0.6
+    })
+
+    var radius = 35;
+    var segments = 8;
+
+    var circleGeometry = new THREE.CircleGeometry(radius, segments);
+    var circleMesh = new THREE.Mesh(circleGeometry, circleMaterial);
+    circleMesh.position.y = -150;
+    circleMesh.position.x = -150;
+
+
+    circleMeshes.push(circleMesh);
+    scene.add(circleMesh);
+
+    // draw circle2
+    var boxMaterial = new THREE.MeshBasicMaterial({
+      color: 0x15776E,
+      wireframe: true,
+      wireframeLinewidth: 3,
+      opacity: 0.6
+    })
+
+    var boxGeometry = new THREE.BoxGeometry(30,30,30);
+    var boxMesh = new THREE.Mesh(boxGeometry, boxMaterial);
+    boxMesh.position.y = -150;
+    boxMesh.position.x = 150;
+
+
+    boxMeshes.push(boxMesh);
+    scene.add(boxMesh);
   }
 
   // Ambient lighting
@@ -117,9 +159,9 @@ function init() {
   scene.add(ambientLight);
 
   // Blue directional light
-  directionalLight = new THREE.DirectionalLight(0x000066);
-  directionalLight.position.set(100, 100, 1000).normalize();
-  scene.add(directionalLight);
+  // directionalLight = new THREE.DirectionalLight(0x000066);
+  // directionalLight.position.set(100, 100, 1000).normalize();
+  // scene.add(directionalLight);
 
   // Red directional light
   directionalLight2 = new THREE.DirectionalLight(0xaa0000);
@@ -193,15 +235,24 @@ function animate() {
   // }
   // console.log("waited");
 
+  // var maxValue = 0;
 
   if ((change % 10 == 0) && (beatVals.length > 10)) {
     beatVals.length = 10;
+    // console.log(beatVals);
     beatVals.pop();
 
+
     var sum = 0;
+
+    
+    
+
     for (var i = 0; i < beatVals.length; i++) {
       sum += beatVals[i];
     }
+
+    
 
     var beatAvg = sum/beatVals.length;
     var start = new Date().getTime();
@@ -209,12 +260,42 @@ function animate() {
 
     if (beatAvg > beatThresh) {
       beatThresh = beatAvg;
-      console.log("beat: " + beatThresh);
+      // console.log("beat: " + beatThresh);
+      // console.log(maxValue);
 
     } else {
       beatThresh *= 0.98; // gravity on threshold
     }
+
+    // console.log((beatVals[i]));
+
+    // maxValue = beatVals[i];
+    // if(beatVals[i] > beatVals[i+1])
+
+    maxValue = beatVals[0];
+
+    for(var i = 0; i < beatVals.length; i++) {
+      if(beatVals[i] > maxValue) {
+          maxValue = beatVals[i];
+      }
+    }
+
+    minValue = beatVals[0];
+
+    for(var i = 0; i < beatVals.length; i++) {
+      if(beatVals[i] < minValue) {
+          minValue = beatVals[i];
+      }
+    }
   }
+
+  // console.log(beatVals);
+ 
+
+  
+
+  // var maxValue = Math.max(beatVals);
+  // console.log(maxValue);
 
   
 
@@ -288,12 +369,32 @@ function animate() {
   //   // }
   // }
 
+  for (var i = 0; i < circleMeshes.length; i++) {
+      circleMeshes[i].scale.y = maxValue/20;
+      circleMeshes[i].scale.x = maxValue/20;
+      if(maxValue > 50) {
+          // circleMeshes[i].rotation.x += 0.05;
+          // circleMeshes[i].rotation.y += 0.05;
+          console.log("maxvalue:" + maxValue);
+          circleMeshes[i].rotation.z +=  0.03;
+      }
 
-  for (var i = 0; i < meshes.length; i++) {
+      boxMeshes[i].scale.y = minValue/20;
+      boxMeshes[i].scale.x = minValue/20;
+      if(minValue < 30) {
+          // circleMeshes[i].rotation.x += 0.05;
+          // circleMeshes[i].rotation.y += 0.05;
+          console.log("minValue:" + minValue);
+          boxMeshes[i].rotation.z -=  0.01;
+      }
+  }
+
+
+  for (var i = 0; i < triangleMeshes.length; i++) {
       // Scale triangles based on audio input
-      meshes[i].scale.y = volAvg/30;
-      meshes[i].scale.x = volAvg/30;
-      meshes[i].position.z = 20*Math.sin(theta) + 0;   
+      triangleMeshes[i].scale.y = volAvg/30;
+      triangleMeshes[i].scale.x = volAvg/30;
+      // triangleMeshes[i].position.z = 20*Math.sin(theta) + 0;   
   }
   camera.lookAt(scene.position);
 
