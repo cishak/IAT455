@@ -40,8 +40,8 @@ function init() {
     var material = new THREE.LineBasicMaterial( { 
       color: 0xff0000,
       // linewidth: 5 ,
-      opacity : 0.7,
-      blending : THREE.AdditiveBlending,
+      opacity : 0.3,
+      // blending : THREE.AdditiveBlending,
       depthTest : false,
       // transparent : true
     });
@@ -59,6 +59,48 @@ function init() {
 
     scene.add(line);
 
+
+    // var particleCount = 1800,
+    //   particles = new THREE.Geometry(),
+    //   pMaterial = new THREE.ParticleBasicMaterial({
+    //     color: 0xFFFFFF,
+    //     size: 20
+    //   });
+
+    // // now create the individual particles
+    // for (var p = 0; p < particleCount; p++) {
+
+    //   // create a particle with random
+    //   // position values, -250 -> 250
+    //   var pX = Math.random() * 500 - 250,
+    //       pY = Math.random() * 500 - 250,
+    //       pZ = Math.random() * 500 - 250,
+    //       particle = new THREE.Vertex(
+    //         new THREE.Vector3(pX, pY, pZ)
+    //       );
+
+    //   // add it to the geometry
+    //   particles.vertices.push(particle);
+    // }
+
+    // // create the particle variables
+    // var pMaterial = new THREE.ParticleBasicMaterial({
+    //   color: 0xFFFFFF,
+    //   size: 20,
+    //   blending: THREE.AdditiveBlending,
+    //   transparent: true
+    // });
+
+    // particleSystem.sortParticles = true;
+
+    // // create the particle system
+    // var particleSystem = new THREE.ParticleSystem(
+    //     particles,
+    //     pMaterial);
+
+    // // add it to the scene
+    // scene.addChild(particleSystem);
+
       // levels.push(0);
       // colors.push(0);
 
@@ -70,59 +112,65 @@ function init() {
   // var topMost = -(sceneHeight / 2);
 
   // Initialize renderer
-  renderer = new THREE.WebGLRenderer({
-    alpha: true
-  });
-
-  // Set size of renderer
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  renderer.setClearColor(0xff0000, 1);
-  renderer.autoClear = false;
-  document.body.appendChild( renderer.domElement );
-
-  // Allow for window resizing
-  window.addEventListener( 'resize', function () {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix(); 
-    renderer.setSize( window.innerWidth, window.innerHeight );
-  }, false );
-
-  // Initialize camera
-  camera = new THREE.PerspectiveCamera(
-    60,
-    window.innerWidth / window.innerHeight,
-    1,
-    100000
-  );
-
-  // The position of the camera in our scene.
-  camera.position.z = 800;
-  // camera.rotation.y = 200;
-  // camera.position.y = 0;
-
-  // Request audio file
-  req.open('GET', 'xx.mp3', true);
-  req.responseType = 'arraybuffer';
-
-  req.onload = function () {
-    // Tell the browser to decode the MP3 data, as PCM data.
-    audioContext.decodeAudioData(req.response, function (data) {
-      // Create an audio source, based on our PCM.
-      var src = audioContext.createBufferSource();
-      src.buffer = data;
-
-      src.connect(analyser);
-      analyser.connect(audioContext.destination);
-
-      src.start();
-      animate();
+    renderer = new THREE.WebGLRenderer({
+      alpha: true,
+      autoClear: false,
+      preserveDrawingBuffer: true
     });
-  }
-  // Tell request object to download audio file
-  req.send();
+
+    // Set size of renderer
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setClearColor(0xff0000, 1);
+    renderer.autoClear = false;
+    document.body.appendChild( renderer.domElement );
+
+    // Allow for window resizing
+    window.addEventListener( 'resize', function () {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix(); 
+      renderer.setSize( window.innerWidth, window.innerHeight );
+    }, false );
+
+    // Initialize camera
+    camera = new THREE.PerspectiveCamera(
+      60,
+      window.innerWidth / window.innerHeight,
+      1,
+      100000
+    );
+
+    // The position of the camera in our scene.
+    camera.position.z = 400;
+    // camera.position.y = 400;
+
+    // camera.rotation.y = 200;
+    // camera.position.y = 0;
+
+    // Request audio file
+    req.open('GET', 'xx.mp3', true);
+    req.responseType = 'arraybuffer';
+
+    req.onload = function () {
+      // Tell the browser to decode the MP3 data, as PCM data.
+      audioContext.decodeAudioData(req.response, function (data) {
+        // Create an audio source, based on our PCM.
+        var src = audioContext.createBufferSource();
+        src.buffer = data;
+
+        src.connect(analyser);
+        analyser.connect(audioContext.destination);
+
+        src.start();
+        animate();
+      });
+    }
+    // Tell request object to download audio file
+    req.send();
 }
 
+
 var theta = 0;
+
 
 function animate() {
 
@@ -170,7 +218,7 @@ function animate() {
 
     if (beatAvg > beatThresh) {
       beatThresh = beatAvg;
-      console.log(beatThresh);
+      // console.log(beatThresh);
 
       line.position.y *= 10;
       // line.position.x = beatThresh;
@@ -213,6 +261,15 @@ function animate() {
 
   line.scale.y = volAvg/40;
   line.scale.x = volAvg/40;
+  var maxRight = window.innerWidth/3;
+  // console.log(maxRight);
+  // if(line.position.x < maxRight ) {
+  //   line.position.x += volAvg/80;
+    // camera.position.x += volAvg/80;
+    // camera.position.y += volAvg/80;
+  // }
+  // line.position.y -= volAvg/1600;
+  // line.position.z = volAvg/40;
 
   requestAnimationFrame(animate);
 
