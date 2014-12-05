@@ -40,9 +40,8 @@ function init() {
     var material = new THREE.LineBasicMaterial( { 
       color: 0xff0000,
       // linewidth: 5 ,
-      opacity : 0.7,
-      blending : THREE.AdditiveBlending,
-      depthTest : false,
+      opacity : 0.2,
+      // depthTest : false,
       // transparent : true
     });
     
@@ -71,7 +70,9 @@ function init() {
 
   // Initialize renderer
   renderer = new THREE.WebGLRenderer({
-    alpha: true
+    alpha: true,
+    autoClear:false,
+    preserveDrawingBuffer: true
   });
 
   // Set size of renderer
@@ -213,6 +214,7 @@ function animate() {
 
   line.scale.y = volAvg/40;
   line.scale.x = volAvg/40;
+  // line.rotation.y = volAvg/40;
 
   requestAnimationFrame(animate);
 
