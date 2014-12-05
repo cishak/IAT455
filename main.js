@@ -45,8 +45,11 @@ var topMost = -(sceneHeight / 2);
 
 // Scene setup
 function init() {
+  console.log(req);
   freqByteData = new Uint8Array(fft.frequencyBinCount);
   timeByteData = new Uint8Array(fft.frequencyBinCount);
+  // console.log(freqByteData);
+  // console.log(buffer);
 
   // Initialize renderer
   renderer = new THREE.WebGLRenderer({
@@ -244,7 +247,9 @@ function triangle(h,w,top,left,volAvg) {
           var left_2 = left + (new_w/2);
           var top_3 = top + new_h;
           var left_3 = left + w - (new_w/2);
-          if(volAvg > 40) {
+          // console.log(BIN_COUNT);
+
+          if(volAvg > 30) {
             triangle(new_h,new_w,top_1,left_1,volAvg);
           }
 
@@ -252,7 +257,7 @@ function triangle(h,w,top,left,volAvg) {
             triangle(new_h,new_w,top_2,left_2,volAvg);
           }
 
-          if(volAvg > 80) {
+          if(volAvg > 90) {
             triangle(new_h,new_w,top_3,left_3,volAvg);
           }
         }
@@ -283,6 +288,7 @@ function drawTriangle(xa, ya, xb, yb, xc, yc) {
     });
 
     var triangleMesh = new THREE.Mesh(triangleGeometry, triangleMaterial);
+    triangleMesh.position.x = 150;
 
     triangleFractal.push(triangleMesh);
     scene.add(triangleMesh);
@@ -293,8 +299,10 @@ function animate() {
   // console.log(volAvg);
   fft.getByteFrequencyData(freqByteData);
   fft.getByteTimeDomainData(timeByteData);
+  // console.log(freqByteData);
 
   fft.getByteFrequencyData(buffer);
+  // console.log(buffer);
   var time = clock.getDelta();
 
   requestAnimationFrame(animate);
@@ -312,6 +320,7 @@ function animate() {
     volume += freqByteData[i];
   }
   volAvg = volume / BIN_COUNT;
+  // console.log(volAvg);
 
   beatVals.unshift(volAvg);
 
@@ -344,7 +353,7 @@ function animate() {
       beatThresh = beatAvg;
       // console.log("beat: " + beatThresh);
       // console.log("vol animate: " + volAvg);
-      tripinski(100,100,volAvg);
+      tripinski(200,200,volAvg);
 
       // if (volAvg > 40) {
       //   var newTriangle = new THREE.Geometry();
