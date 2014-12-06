@@ -51,43 +51,42 @@ function update() {
 
     beatVals.unshift(volAvg);
 
-  if ((change % BEAT_CHECK == 0) && (beatVals.length > BEAT_CHECK)) {
-    beatVals.length = BEAT_CHECK;
-    beatVals.pop();
+	if ((change % BEAT_CHECK == 0) && (beatVals.length > BEAT_CHECK)) {
+	    beatVals.length = BEAT_CHECK;
+	    beatVals.pop();
 
+	    var sum = 0;
 
-    var sum = 0;
+	    for (var i = 0; i < beatVals.length; i++) {
+	        sum += beatVals[i];
+	    }
 
-    for (var i = 0; i < beatVals.length; i++) {
-      sum += beatVals[i];
-    }
+	    var beatAvg = sum/beatVals.length;
 
-    var beatAvg = sum/beatVals.length;
+	    if (beatAvg > beatThresh) {
+	        beatThresh = beatAvg;
+	        // console.log(beatThresh);
 
-    if (beatAvg > beatThresh) {
-      beatThresh = beatAvg;
-      console.log(beatThresh);
+	    } else {
+	        beatThresh *= 0.99; // gravity on threshold
+	    }
 
-    } else {
-      beatThresh *= 0.99; // gravity on threshold
-    }
+	    maxValue = beatVals[0];
 
-    maxValue = beatVals[0];
+	    for(var i = 0; i < beatVals.length; i++) {
+		    if(beatVals[i] > maxValue) {
+		        maxValue = beatVals[i];
+		    }
+	    }
 
-    for(var i = 0; i < beatVals.length; i++) {
-      if(beatVals[i] > maxValue) {
-          maxValue = beatVals[i];
-      }
-    }
+	    minValue = beatVals[0];
 
-    minValue = beatVals[0];
-
-    for(var i = 0; i < beatVals.length; i++) {
-      if(beatVals[i] < minValue) {
-          minValue = beatVals[i];
-      }
-    }
-  }
+	    for(var i = 0; i < beatVals.length; i++) {
+		    if(beatVals[i] < minValue) {
+		        minValue = beatVals[i];
+		    }
+	    }
+	}
 }
 
 
@@ -100,7 +99,7 @@ function init() {
 	and allow the radius of them to vary. If so, modify the next three variables.
 	*/
 	numCircles = 1;
-	maxMaxRad = 200;
+	maxMaxRad = 80;
 	minMaxRad = 100;
 	
 	/*
@@ -126,26 +125,28 @@ function init() {
 
 
 	// Request audio file
-  req.open('GET', 'Hustle.mp3', true);
-  req.responseType = 'arraybuffer';
+	req.open('GET', 'olafur.mp3', true);
+	req.responseType = 'arraybuffer';
 
-  req.onload = function () {
-    // Tell the browser to decode the MP3 data, as PCM data.
-    audioContext.decodeAudioData(req.response, function (data) {
-      // Create an audio source, based on our PCM.
-      var src = audioContext.createBufferSource();
-      src.buffer = data;
+	req.onload = function () {
+	    // Tell the browser to decode the MP3 data, as PCM data.
+	    audioContext.decodeAudioData(req.response, function (data) {
 
-      src.connect(analyser);
-      analyser.connect(audioContext.destination);
+		    // Create an audio source, based on our PCM.
+		    var src = audioContext.createBufferSource();
+		    src.buffer = data;
 
-      src.start();
-      update();
-      startGenerate();
-    });
-  }
-  // Tell request object to download audio file
-  req.send();
+		    src.connect(analyser);
+		    analyser.connect(audioContext.destination);
+
+		    src.start();
+	      	update();
+	      	startGenerate();
+	    });
+	}
+
+	// Tell request object to download audio file
+	req.send();
 }
 
 function startGenerate() {
@@ -179,7 +180,7 @@ function setCircles() {
 		
 		var newCircle = {
 			centerX: -maxR,
-			centerY: displayHeight/2-50,
+			centerY: displayHeight/2+50,
 			maxRad : maxR,
 			minRad : minR,
 			color: grad, //can set a gradient or solid color here.
@@ -237,8 +238,8 @@ function onTimer() {
 			rad = c.minRad + (point1.y + cosParam*(point2.y-point1.y))*(c.maxRad - c.minRad);
 			
 			//move center
-			c.centerX += 0.5;
-			// c.centerY += 0.04;
+			c.centerX += 0.6;
+			c.centerY += volAvg/20*Math.sin(c.globalPhase + drawCount/10000*TWO_PI);
 
 
 
@@ -248,7 +249,8 @@ function onTimer() {
 
 
 
-			yOffset = volAvg;//40*Math.sin(c.globalPhase + drawCount/1000*TWO_PI);
+			yOffset = 40*Math.sin(c.globalPhase + drawCount/1000*TWO_PI);
+			console.log(volAvg);
 			//stop when off screen
 			if (c.centerX > displayWidth + maxMaxRad) {
 				clearInterval(timer);
@@ -274,7 +276,11 @@ function onTimer() {
 			}
 			context.closePath();
 			context.stroke();
-			//context.fill();		
+			//context.fill();	
+
+			context.save();
+			context.translate(100,0);
+			context.restore();	
 				
 		}
 	}
