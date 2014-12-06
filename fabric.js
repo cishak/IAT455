@@ -33,6 +33,7 @@ var req = new XMLHttpRequest();
 
 var lastFrameTime = 0;
 var totalSeconds = 0;
+var deltaSeconds = 0;
 
 
 //animation loop
@@ -41,6 +42,15 @@ function update() {
 
 	analyser.getByteFrequencyData(freqByteData);
   	analyser.getByteTimeDomainData(timeByteData);
+
+  	var now = Date.now();
+	deltaSeconds = (now - lastFrameTime) / 1000;
+	console.log(deltaSeconds);
+
+
+	lastFrameTime = now;
+
+	// startGenerate(deltaSeconds);
 
   // var perlin = new ImprovedNoise();
   // var noisePos = Math.random()*100;
@@ -147,10 +157,6 @@ function init() {
 		    src.start();
 	      	update();
 
-	      	var now = Date.now();
-			var deltaSeconds = (now - lastFrameTime) / 1000;
-			lastFrameTime = now;
-
 	      	startGenerate(deltaSeconds);
 	    });
 	}
@@ -161,6 +167,7 @@ function init() {
 
 function startGenerate(delta) {
 	totalSeconds += delta;
+	// console.log(delta);
 
 	var vx = 100; // the background scrolls with a speed of 100 pixels/sec
 	var xpos = totalSeconds * vx % displayWidth;
@@ -168,7 +175,8 @@ function startGenerate(delta) {
 	context.save();
 	drawCount = 0;
 	
-	context.translate(-xpos,0);
+	// context.translate(-xpos,0);
+	context.translate.x +=100;
 
 	context.setTransform(1,0,0,1,0,0);
 	context.clearRect(0,0,displayWidth,displayHeight);
@@ -272,10 +280,10 @@ function onTimer() {
 			yOffset = 40*Math.sin(c.globalPhase + drawCount/1000*TWO_PI);
 			// console.log(volAvg);
 			//stop when off screen
-			// if (c.centerX > displayWidth + maxMaxRad) {
-			// 	clearInterval(timer);
-			// 	timer = null;
-			// }			
+			if (c.centerX > displayWidth + maxMaxRad) {
+				clearInterval(timer);
+				timer = null;
+			}			
 			
 			//we are drawing in new position by applying a transform. We are doing this so the gradient will move with the drawing.
 			context.setTransform(xSqueeze,0,0,1,c.centerX,c.centerY+yOffset)
