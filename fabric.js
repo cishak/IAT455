@@ -31,6 +31,9 @@ var minValue;
 
 var req = new XMLHttpRequest();
 
+var lastFrameTime = 0;
+var totalSeconds = 0;
+
 
 //animation loop
 function update() {
@@ -87,6 +90,8 @@ function update() {
 		    }
 	    }
 	}
+
+
 }
 
 
@@ -99,8 +104,8 @@ function init() {
 	and allow the radius of them to vary. If so, modify the next three variables.
 	*/
 	numCircles = 1;
-	maxMaxRad = 80;
-	minMaxRad = 100;
+	maxMaxRad = 50;
+	minMaxRad = 70;
 	
 	/*
 	We draw closed curves with varying radius. The factor below should be set between 0 and 1,
@@ -141,7 +146,12 @@ function init() {
 
 		    src.start();
 	      	update();
-	      	startGenerate();
+
+	      	var now = Date.now();
+			var deltaSeconds = (now - lastFrameTime) / 1000;
+			lastFrameTime = now;
+
+	      	startGenerate(deltaSeconds);
 	    });
 	}
 
@@ -149,16 +159,26 @@ function init() {
 	req.send();
 }
 
-function startGenerate() {
+function startGenerate(delta) {
+	totalSeconds += delta;
+
+	var vx = 100; // the background scrolls with a speed of 100 pixels/sec
+	var xpos = totalSeconds * vx % displayWidth;
+
+	context.save();
 	drawCount = 0;
-	context.setTransform(1,0,0,1,0,0);
 	
+	context.translate(-xpos,0);
+
+	context.setTransform(1,0,0,1,0,0);
 	context.clearRect(0,0,displayWidth,displayHeight);
 	
 	setCircles();
 	
 	if(timer) {clearInterval(timer);}
 	timer = setInterval(onTimer,1000/50);
+
+	context.restore();
 }
 
 function setCircles() {
@@ -250,12 +270,12 @@ function onTimer() {
 
 
 			yOffset = 40*Math.sin(c.globalPhase + drawCount/1000*TWO_PI);
-			console.log(volAvg);
+			// console.log(volAvg);
 			//stop when off screen
-			if (c.centerX > displayWidth + maxMaxRad) {
-				clearInterval(timer);
-				timer = null;
-			}			
+			// if (c.centerX > displayWidth + maxMaxRad) {
+			// 	clearInterval(timer);
+			// 	timer = null;
+			// }			
 			
 			//we are drawing in new position by applying a transform. We are doing this so the gradient will move with the drawing.
 			context.setTransform(xSqueeze,0,0,1,c.centerX,c.centerY+yOffset)
@@ -278,9 +298,9 @@ function onTimer() {
 			context.stroke();
 			//context.fill();	
 
-			context.save();
-			context.translate(100,0);
-			context.restore();	
+			// context.save();
+			
+			// context.restore();	
 				
 		}
 	}
