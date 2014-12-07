@@ -8,6 +8,7 @@ var triangleMeshes = [];
 var circleMeshes = [];
 var boxMeshes = [];
 var triangleFractal = [];
+var lineSphereMeshes = [];
 
 var BIN_COUNT = 512;
 var beatThresh = 1;
@@ -160,6 +161,29 @@ function init() {
     
   }
 
+
+
+  // // Lines around border
+  // for (var i=0; i<40; i++){
+  //   var lineSphereGeometry = new THREE.Geometry();
+
+  //   var vector = new THREE.Vector3(Math.random() * 2 - 1, Math.random() * 2 -1, Math.random() * 2 - 1);
+  //   vector.normalize();
+  //   vector.multiplyScalar(450);
+
+  //   lineSphereGeometry.vertices.push(vector);
+
+  //   var vector2 = vector.clone();
+  //   vector2.multiplyScalar(Math.random() * volAvg * 0.3 + 1);
+
+  //   lineSphereGeometry.vertices.push(vector2);
+
+  //   var lineSphere = new THREE.Line(lineSphereGeometry, new THREE.LineBasicMaterial({ color: 0x000000, opacity: 0.1 }));
+  //   lineSphereMeshes.push(lineSphere);
+  //   scene.add(lineSphere);
+  // }
+
+
   // console.log(volAvg);
 
   // Ambient lighting
@@ -213,10 +237,12 @@ var x1 = 0, y1 = 0, x2, y2 = 0;
 var lineMeshes = [];
 var beatCount = 0;
 var petalMeshes = [];
+var rotationAngle = 5;
+var highestBeat = 0;
 
 
 function animate() {
-  var lineSphereMeshes = [];
+  
   // console.log(volAvg);
   fft.getByteFrequencyData(freqByteData);
   fft.getByteTimeDomainData(timeByteData);
@@ -231,9 +257,6 @@ function animate() {
   theta += time * 0.1;
 
   change++;
-  // scaleFactor += time * 2;
-  // camera.position.z -= 1;
-  // camera.rotation.y = 90 * Math.PI / 180;
 
   // Determine volume
   var volume = 0;
@@ -245,20 +268,9 @@ function animate() {
 
   beatVals.unshift(volAvg);
 
-      
 
-  // var start = new Date().getTime();
-  // for (var i = 0; i < 1e7; i++) {
-  // if (((new Date().getTime() - start) > 200) && (beatVals.length > 10)){
-  //     break;
-  //   }
-  // }
-  // console.log("waited");
-
-  // var maxValue = 0;
-
-  if ((change % 10 == 0) && (beatVals.length > 10)) {
-    beatVals.length = 10;
+  if ((change % 9 == 0) && (beatVals.length > 9)) {
+    beatVals.length = 9;
     // console.log(beatVals);
     beatVals.pop();
 
@@ -272,6 +284,7 @@ function animate() {
     var start = new Date().getTime();
 
     if (beatAvg > beatThresh) {
+      
       maxValue = beatVals[0];
 
       for(var i = 0; i < beatVals.length; i++) {
@@ -281,6 +294,12 @@ function animate() {
       }
       currentMax = maxValue;
 
+      // track highest beat
+      if(highestBeat < maxValue) {
+        highestBeat = maxValue;
+      }
+      console.log(highestBeat);
+
       minValue = beatVals[0];
 
       for(var i = 0; i < beatVals.length; i++) {
@@ -288,67 +307,33 @@ function animate() {
             minValue = beatVals[i];
         }
       }
+      // console.log(beatVals);
 
       // console.log("inside beat");
       beatThresh = beatAvg;
-      
+      // console.log(beatThresh);
 
-      var material = new THREE.MeshBasicMaterial({
-          color: 0x997825,
-          // blending: THREE.MultiplyBlending,
-          opacity: 0.3,
-          transparent: true
-      })
+      beatCount++;
+      var divider = highestBeat/3;
+      // console.log(divider);
 
-      // x1 = lineLength;
-      // y2 = lineHeight;
-      x2 = lineLength+(volAvg/10);
-      y2 = lineHeight+(volAvg/10);
 
-      var petalShape = new THREE.Shape();
-      // lineGeometry.vertices.push(new THREE.Vector3(x1, y1, 0));
-      // lineGeometry.vertices.push(new THREE.Vector3(x2, y2, 0));
-      petalShape.moveTo(x1, 0);
-      petalShape.lineTo(x1+volAvg, -20);
-      petalShape.lineTo(x1+(volAvg*3), 0);
-      petalShape.lineTo(x1+volAvg, 20);
-      petalShape.lineTo(x1, 0);
-
-      // lineGeometry.vertices.push(new THREE.Vector3(100, 0, 0));
-
-      var petalGeometry = new THREE.ShapeGeometry(petalShape);
-      var petalMesh = new THREE.Mesh(petalGeometry, material);
-      // console.log(petalMesh);
-      petalMesh.rotation.z += lineLength;
-      // Set position of lines on canvas
-        // line.position.x = length;
-        // line.position.y = Math.random() * sceneHeight + topMost;
-      // line.rotation.z = lineHeight;
-      petalMeshes.push(petalMesh);
-      scene.add(petalMesh); 
-      lineLength += 5; 
-
-      if(lineLength >= 100) {
-        lineLength = 0;
-        x1 = 50;
-        x2 = lineLength+(volAvg/10);
-      } 
-
-      if(currentMax <= previousMax) {
-        // console.log("current smaller");
-        // if(lineHeight <)
-        lineHeight -= Math.sin(theta)*volAvg;
-      } else if (currentMax > previousMax) {
-        // console.log("current bigger");
-        lineHeight += Math.sin(theta)*volAvg;
-      } 
+      if(volAvg <= divider) {
+        console.log("low");
+        drawFlower(volAvg,0x997825);
+      } else if(volAvg <= divider*2 && volAvg >= divider) {
+        console.log("medium");
+        drawFlower(volAvg,0x000000);
+      } else if(volAvg >= divider*2 && volAvg <= BIN_COUNT) {
+        console.log("high");
+        drawFlower(volAvg,0x15776E);
+      }
 
 
       // console.log(" previousmax: " + previousMax);
       // console.log("currentmax: " + currentMax );
 
-
-
+      // Lines around border
       var lineSphereGeometry = new THREE.Geometry();
 
       var vector = new THREE.Vector3(Math.random() * 2 - 1, Math.random() * 2 -1, Math.random() * 2 - 1);
@@ -365,9 +350,9 @@ function animate() {
       var lineSphere = new THREE.Line(lineSphereGeometry, new THREE.LineBasicMaterial({ color: 0x000000, opacity: 0.1 }));
       lineSphereMeshes.push(lineSphere);
       scene.add(lineSphere);
-
+    
     } else {
-      beatThresh *= 0.98; // gravity on threshold
+      beatThresh *= 0.95; // gravity on threshold
     }
   }
 
@@ -397,6 +382,24 @@ function animate() {
   //     }
   // }
 
+  // var lineSphereGeometry = new THREE.Geometry();
+
+  // var vector = new THREE.Vector3(Math.random() * 2 - 1, Math.random() * 2 -1, Math.random() * 2 - 1);
+  // vector.normalize();
+  // vector.multiplyScalar(450 + volAvg);
+
+  // lineSphereGeometry.vertices.push(vector);
+
+  // var vector2 = vector.clone();
+  // vector2.multiplyScalar(Math.random() * volAvg * 0.3 + 1);
+
+  // lineSphereGeometry.vertices.push(vector2);
+
+  // var lineSphere = new THREE.Line(lineSphereGeometry, new THREE.LineBasicMaterial({ color: 0x000000, opacity: 0.1 }));
+  // lineSphereMeshes.push(lineSphere);
+  // scene.add(lineSphere);
+
+
 
   for (var i = 0; i < triangleMeshes.length; i++) {
       // Scale triangles based on audio input
@@ -405,42 +408,80 @@ function animate() {
       // triangleMeshes[i].position.z = 20*Math.sin(theta) + 0;  
   }
 
-
   for (var i = 0; i < petalMeshes.length; i++) {
       // Scale triangles based on audio input
-      petalMeshes[i].scale.y += volAvg/120;
-      petalMeshes[i].scale.x += volAvg/120;
+      if(petalMeshes[i].scale.y <= 1.3) {
+        petalMeshes[i].scale.y += 0.001;
+        petalMeshes[i].scale.x += 0.001;
+      }
       // triangleMeshes[i].position.z = 20*Math.sin(theta) + 0;  
   }
-  // for (var i = 0; i < lineSphereMeshes.length; i++) {
-  //     // Scale triangles based on audio input
-  //     // lineSphereMeshes[i].scale.x = volAvg/30;
-  //     // lineSphereMeshes[i].scale.y = volAvg/30;
-  //     // lineSphereMeshes[i].scale.z = volAvg/30;
-  //     lineSphereMeshes[i].position.y = volAvg;
 
+  for (var i = 0; i < lineSphereMeshes.length; i++) {
+      lineSphereMeshes[i].position.z = volAvg*30;
+      lineSphereMeshes[i].position.y = Math.sin(theta+i);
+      lineSphereMeshes[i].position.x = Math.cos(theta+i);
 
-  // }
-
-  // camera.position.z = (volAvg) + 1000;
-
-  // for (var i = 0; i < triangleFractal.length; i++) {
-      // Scale triangles based on audio input 
-
-      // triangleFractal[i].scale.y = volAvg/10;
-      // triangleFractal[i].scale.x = volAvg/10;
-
-      // if(volAvg < 50) {
-          // tripinski(volAvg*2,volAvg*2);
-      // }
-      // if the volAvg is small, draw less triangle
-      //   if the volavg is big, draw more triangle
-  // }
+  }
 
 
   camera.lookAt(scene.position);
 
   renderer.render(scene, camera);
+}
+
+
+function drawFlower(volAvg,petalColor) {
+  var material = new THREE.MeshBasicMaterial({
+          color: petalColor,
+          // blending: THREE.AdditiveBlending,
+          opacity: 0.2,
+          transparent: true
+      })
+
+      // x1 = lineLength;
+      // y2 = lineHeight;
+      x2 = lineLength+(volAvg/10);
+      y2 = lineHeight+(volAvg/10);
+
+      var petalShape = new THREE.Shape();
+      // lineGeometry.vertices.push(new THREE.Vector3(x1, y1, 0));
+      // lineGeometry.vertices.push(new THREE.Vector3(x2, y2, 0));
+      petalShape.moveTo(x1, 0);
+      petalShape.lineTo(x1+volAvg, -20);
+      petalShape.lineTo(x1+(volAvg*5), 0);
+      petalShape.lineTo(x1+volAvg, 20);
+      petalShape.lineTo(x1, 0);
+
+      // lineGeometry.vertices.push(new THREE.Vector3(100, 0, 0));
+
+      var petalGeometry = new THREE.ShapeGeometry(petalShape);
+      var petalMesh = new THREE.Mesh(petalGeometry, material);
+      // console.log(petalMesh);
+      petalMesh.rotation.z += rotationAngle;
+      // Set position of lines on canvas
+        // line.position.x = length;
+        // line.position.y = Math.random() * sceneHeight + topMost;
+      // line.rotation.z = lineHeight;
+      petalMeshes.push(petalMesh);
+      scene.add(petalMesh); 
+      lineLength += 5; 
+      rotationAngle +=5;
+
+      if(lineLength >= 100) {
+        lineLength = 0;
+        x1 = 50;
+        x2 = lineLength+(volAvg/10);
+      } 
+
+      if(currentMax <= previousMax) {
+        // console.log("current smaller");
+        // if(lineHeight <)
+        lineHeight -= Math.sin(theta)*volAvg;
+      } else if (currentMax > previousMax) {
+        // console.log("current bigger");
+        lineHeight += Math.sin(theta)*volAvg;
+      } 
 }
 
 init();
