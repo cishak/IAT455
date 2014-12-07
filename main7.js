@@ -8,6 +8,7 @@ var triangleMeshes = [];
 var circleMeshes = [];
 var boxMeshes = [];
 var triangleFractal = [];
+var circles = [];
 
 var BIN_COUNT = 512;
 var beatThresh = 1;
@@ -158,8 +159,22 @@ function init() {
     scene.add(boxMesh);
 
     // tripinski(100,100);
+
+
+
+    var circMaterial = new THREE.MeshBasicMaterial({
+      color: 0xff0000
+    })
+
+
+    var circleGeom = new THREE.circle(circMaterial);
+    var circleMesh = new THREE.CircleGeometry(radius, segments);
+    scene.add(circle);
+    circles.push(circle);
     
   }
+
+  // makeCircles();
 
   // console.log(volAvg);
 
@@ -204,6 +219,27 @@ function init() {
   req.send();
 }
 
+
+
+// function makeCircles() {
+//   var cMaterial = new THREE.MeshBasicMaterial({
+//     color: 0xff0000
+//   })
+
+
+//   var circle = new THREE.circle(cMaterial);
+//   scene.add(circle);
+//   circles.push(circle);
+// }
+
+function drawCircle(context) {
+  context.beginPath();
+  context.arc(0, 0, 1, 0, Math.PI*2, true);
+  context.fill();
+}
+
+
+
 var theta = 0;
 var scaleFactor = 0;
 var lineLength = 0;
@@ -227,9 +263,6 @@ function animate() {
   theta += time * 0.1;
 
   change++;
-  // scaleFactor += time * 2;
-  // camera.position.z -= 1;
-  // camera.rotation.y = 90 * Math.PI / 180;
 
   // Determine volume
   var volume = 0;
@@ -241,15 +274,6 @@ function animate() {
 
   beatVals.unshift(volAvg);
 
-  // var start = new Date().getTime();
-  // for (var i = 0; i < 1e7; i++) {
-  // if (((new Date().getTime() - start) > 200) && (beatVals.length > 10)){
-  //     break;
-  //   }
-  // }
-  // console.log("waited");
-
-  // var maxValue = 0;
 
   if ((change % 10 == 0) && (beatVals.length > 10)) {
     beatVals.length = 10;
@@ -298,8 +322,7 @@ function animate() {
       color: 0x000000,
       // blending: THREE.AdditiveBlending,
       opacity: 0.9,
-      wireframe: true,
-      wireframeLinewidth: 5
+      linewidth: 5
       // transparent: true,
   })
 
