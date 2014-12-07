@@ -10,6 +10,8 @@ var boxMeshes = [];
 var triangleFractal = [];
 var lineSphereMeshes = [];
 
+var colours = [];
+
 var BIN_COUNT = 512;
 var beatThresh = 1;
 var onBeat = false;
@@ -50,6 +52,13 @@ function init() {
   timeByteData = new Uint8Array(fft.frequencyBinCount);
   // console.log(freqByteData);
   // console.log(buffer);
+
+  // colours
+  colours[0] = '0xFE4365';
+  colours[1] = '0xFC9D9A';
+  colours[2] = '0xF9CDAD';
+  colours[3] = '0xC8C8A9';
+  colours[4] = '0x83AF9B';
 
   // Initialize renderer
   renderer = new THREE.WebGLRenderer({
@@ -157,34 +166,8 @@ function init() {
     boxMeshes.push(boxMesh);
     // scene.add(boxMesh);
 
-    // tripinski(100,100);
     
   }
-
-
-
-  // // Lines around border
-  // for (var i=0; i<40; i++){
-  //   var lineSphereGeometry = new THREE.Geometry();
-
-  //   var vector = new THREE.Vector3(Math.random() * 2 - 1, Math.random() * 2 -1, Math.random() * 2 - 1);
-  //   vector.normalize();
-  //   vector.multiplyScalar(450);
-
-  //   lineSphereGeometry.vertices.push(vector);
-
-  //   var vector2 = vector.clone();
-  //   vector2.multiplyScalar(Math.random() * volAvg * 0.3 + 1);
-
-  //   lineSphereGeometry.vertices.push(vector2);
-
-  //   var lineSphere = new THREE.Line(lineSphereGeometry, new THREE.LineBasicMaterial({ color: 0x000000, opacity: 0.1 }));
-  //   lineSphereMeshes.push(lineSphere);
-  //   scene.add(lineSphere);
-  // }
-
-
-  // console.log(volAvg);
 
   // Ambient lighting
   var ambientLight = new THREE.AmbientLight(0x333333);
@@ -206,7 +189,7 @@ function init() {
   scene.add(directionalLight3);
 
   // Request audio file
-  req.open('GET', 'xx.mp3', true);
+  req.open('GET', 'olafur.mp3', true);
   req.responseType = 'arraybuffer';
 
   req.onload = function () {
@@ -347,7 +330,7 @@ function animate() {
 
       lineSphereGeometry.vertices.push(vector2);
 
-      var lineSphere = new THREE.Line(lineSphereGeometry, new THREE.LineBasicMaterial({ color: 0x000000, opacity: 0.1 }));
+      var lineSphere = new THREE.Line(lineSphereGeometry, new THREE.LineBasicMaterial({ color: 0xffffff, opacity: 0.01 }));
       lineSphereMeshes.push(lineSphere);
       scene.add(lineSphere);
     
@@ -411,8 +394,9 @@ function animate() {
   for (var i = 0; i < petalMeshes.length; i++) {
       // Scale triangles based on audio input
       if(petalMeshes[i].scale.y <= 1.3) {
-        petalMeshes[i].scale.y += 0.001;
-        petalMeshes[i].scale.x += 0.001;
+        petalMeshes[i].scale.y += 0.01;
+        petalMeshes[i].scale.x += 0.01;
+        // petalMeshes[i].material.color.setHex(colours[Math.floor(Math.random()*3)]);
       }
       // triangleMeshes[i].position.z = 20*Math.sin(theta) + 0;  
   }
