@@ -138,7 +138,7 @@ function init() {
 
 
     circleMeshes.push(circleMesh);
-    scene.add(circleMesh);
+    // scene.add(circleMesh);
 
     // draw circle2
     var boxMaterial = new THREE.MeshBasicMaterial({
@@ -209,9 +209,12 @@ var lineLength = 0;
 var lineHeight = 0;
 var currentMax = 0;
 var previousMax = 0;
-var x1 = 0, y1 = 0, x2 = 0, y2 = 0;
+var x1 = 0, y1 = 0, x2, y2 = 0;
+var lineMeshes = [];
+
 
 function animate() {
+  var lineSphereMeshes = [];
   // console.log(volAvg);
   fft.getByteFrequencyData(freqByteData);
   fft.getByteTimeDomainData(timeByteData);
@@ -404,8 +407,8 @@ function animate() {
       // lineSphereMeshes[i].scale.x = volAvg/30;
       // lineSphereMeshes[i].scale.y = volAvg/30;
       // lineSphereMeshes[i].scale.z = volAvg/30;
-      // lineSphereMeshes[i].rotation.x = volAvg/30;
       lineSphereMeshes[i].position.y = volAvg;
+
 
   }
 
