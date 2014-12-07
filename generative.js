@@ -45,7 +45,6 @@ var topMost = -(sceneHeight / 2);
 
 // Scene setup
 function init() {
-  console.log(req);
   freqByteData = new Uint8Array(fft.frequencyBinCount);
   timeByteData = new Uint8Array(fft.frequencyBinCount);
   // console.log(freqByteData);
@@ -183,7 +182,7 @@ function init() {
   scene.add(directionalLight3);
 
   // Request audio file
-  req.open('GET', 'olafur.mp3', true);
+  req.open('GET', 'xx.mp3', true);
   req.responseType = 'arraybuffer';
 
   req.onload = function () {
@@ -206,94 +205,11 @@ function init() {
 
 var theta = 0;
 var scaleFactor = 0;
-
-
-function tripinski(h,w,volAvg) {
-    //first triangle
-    var xa = w/2;
-    var ya = 0;
-    var xb = 0;
-    var yb = h;
-    var xc = w;
-    var yc = h;
-    drawTriangle(xa,ya,xb,yb,xc,yc);
-    var top = h/2;
-    var left = w/4;
-    triangle(h/2,w/2,top,left,volAvg);
-    // console.log("vol tripinski: " + volAvg);
-}
-
-
-function triangle(h,w,top,left,volAvg) {
-    var xa = left;
-    var ya = top;
-    var xb = left+w;
-    var yb = top;
-    var xc = left+(w/2);
-    var yc = top+h;
-    // console.log(volAvg);
-
-    if (w > 10) { 
-        //draw the current triangle
-        if(volAvg > 20) {
-          drawTriangle(xa,ya,xb,yb,xc,yc);
-          //half the size and determine the top/left for the next
-          //series of triangles and call the function on those
-          var new_h = h/2;
-          var new_w = w/2;
-          var top_1 = top + new_h;
-          var left_1 = left - (new_w/2);
-          var top_2 = top - new_h;
-          var left_2 = left + (new_w/2);
-          var top_3 = top + new_h;
-          var left_3 = left + w - (new_w/2);
-          // console.log(BIN_COUNT);
-
-          if(volAvg > 30) {
-            triangle(new_h,new_w,top_1,left_1,volAvg);
-          }
-
-          if(volAvg > 60) {
-            triangle(new_h,new_w,top_2,left_2,volAvg);
-          }
-
-          if(volAvg > 90) {
-            triangle(new_h,new_w,top_3,left_3,volAvg);
-          }
-        }
-        
-    }
-}
-
-
-function drawTriangle(xa, ya, xb, yb, xc, yc) {
-    var triangleGeometry = new THREE.Geometry();
-
-    var v1 = new THREE.Vector3(xa,ya,0);
-    var v2 = new THREE.Vector3(xb,yb,0);
-    var v3 = new THREE.Vector3(xc,yc,0);
-
-    triangleGeometry.vertices.push(v1);
-    triangleGeometry.vertices.push(v2);
-    triangleGeometry.vertices.push(v3);
-
-    triangleGeometry.faces.push(new THREE.Face3(0, 1, 2));
-
-    var triangleMaterial = new THREE.MeshBasicMaterial({
-      color: 0xf35149,
-      // blending: THREE.AdditiveBlending,
-      opacity: 1,
-      wireframe: true,
-      wireframeLinewidth: 3
-    });
-
-    var triangleMesh = new THREE.Mesh(triangleGeometry, triangleMaterial);
-    triangleMesh.position.x = 150;
-
-    triangleFractal.push(triangleMesh);
-    scene.add(triangleMesh);
-}
-
+var lineLength = 0;
+var lineHeight = 0;
+var currentMax = 0;
+var previousMax = 0;
+var x1 = 0, y1 = 0, x2 = 0, y2 = 0;
 
 function animate() {
   // console.log(volAvg);
@@ -348,158 +264,77 @@ function animate() {
     var beatAvg = sum/beatVals.length;
     var start = new Date().getTime();
 
-
     if (beatAvg > beatThresh) {
+      maxValue = beatVals[0];
+
+      for(var i = 0; i < beatVals.length; i++) {
+        if(beatVals[i] > maxValue) {
+            maxValue = beatVals[i];
+        }
+      }
+      currentMax = maxValue;
+
+      minValue = beatVals[0];
+
+      for(var i = 0; i < beatVals.length; i++) {
+        if(beatVals[i] < minValue) {
+            minValue = beatVals[i];
+        }
+      }
+
+      // console.log("inside beat");
       beatThresh = beatAvg;
-      // console.log("beat: " + beatThresh);
-      // console.log("vol animate: " + volAvg);
-      tripinski(200,200,volAvg);
+      
 
-      // if (volAvg > 40) {
-      //   var newTriangle = new THREE.Geometry();
+      var material = new THREE.LineBasicMaterial({
+          color: 0x000000,
+          // blending: THREE.AdditiveBlending,
+          opacity: 0.9,
+          // transparent: true,
+      })
 
-      //   var v1 = new THREE.Vector3(-30, 0, 0);
-      //   var v2 = new THREE.Vector3(0, 60, 0);
-      //   var v3 = new THREE.Vector3(30, 0, 0);
+      // x1 = lineLength;
+      // y2 = lineHeight;
+      x2 = lineLength+(volAvg/10);
+      y2 = lineHeight+(volAvg/10);
 
-      //   newTriangle.vertices.push(v1);
-      //   newTriangle.vertices.push(v2);
-      //   newTriangle.vertices.push(v3);
+      var lineGeometry = new THREE.Geometry();
+      lineGeometry.vertices.push(new THREE.Vector3(x1, y1, 0));
+      // console.log(length);
+      lineGeometry.vertices.push(new THREE.Vector3(x2, y2, 0));
+      // lineGeometry.vertices.push(new THREE.Vector3(100, 0, 0));
 
-      //   newTriangle.faces.push(new THREE.Face3(0, 1, 2));
+      var line = new THREE.Line(lineGeometry, material);
 
-      //   var newMaterial = new THREE.MeshBasicMaterial({
-      //     color: 0xf35149,
-      //     // blending: THREE.AdditiveBlending,
-      //     opacity: 0.6,
-      //     // transparent: true,
-      //     wireframe: true,
-      //     wireframeLinewidth: 5
-      //   });
-      //   var newMesh = new THREE.Mesh(newTriangle, newMaterial);
+      // Set position of lines on canvas
+        // line.position.x = length;
+        // line.position.y = Math.random() * sceneHeight + topMost;
+      // line.rotation.z = lineHeight;
 
-      //   // Set position of triangles on canvas
-      //   newMesh.position.x = Math.random() * sceneWidth + leftMost;
-      //   newMesh.position.y = Math.random() * sceneHeight + topMost;
-      //   // newMesh.scale.x += theta;
-      //   // newMesh.scale.y += theta;
+      scene.add(line); 
+      lineLength += 15; 
 
-      //   camera.position.z += 4;
+      if(currentMax <= previousMax) {
+        console.log("current smaller");
+        lineHeight -= Math.sin(volAvg;
+      } else if (currentMax > previousMax) {
+        console.log("current bigger");
+        lineHeight += volAvg;
+      } 
+      // console.log(" previousmax: " + previousMax);
+      // console.log("currentmax: " + currentMax );
 
-      //   sceneWidth += 5;
-      //   sceneHeight += 5;
-      //   leftMost = -(sceneWidth / 2);
-      //   topMost = -(sceneHeight / 2);
 
-      //   scene.add(newMesh);
-      // }
-    
 
     } else {
       beatThresh *= 0.98; // gravity on threshold
     }
-
-    // console.log((beatVals[i]));
-
-    // maxValue = beatVals[i];
-    // if(beatVals[i] > beatVals[i+1])
-
-    maxValue = beatVals[0];
-
-    for(var i = 0; i < beatVals.length; i++) {
-      if(beatVals[i] > maxValue) {
-          maxValue = beatVals[i];
-      }
-    }
-
-    minValue = beatVals[0];
-
-    for(var i = 0; i < beatVals.length; i++) {
-      if(beatVals[i] < minValue) {
-          minValue = beatVals[i];
-      }
-    }
   }
 
-  // console.log(beatVals);
- 
-
+  previousMax = currentMax;
+  x1 = x2;
+  y1 = y2;
   
-
-  // var maxValue = Math.max(beatVals);
-  // console.log(maxValue);
-
-  
-
-  // if (change % 3 == 0) {
-  //   // console.log(change%2);
-  //   if (volAvg > 40) {
-  //     beatcount++;
-  //     console.log(beatcount);
-
-
-
-  //     if (volAvg > 40) {
-  //       var newTriangle = new THREE.Geometry();
-
-  //       var v1 = new THREE.Vector3(-30, 0, 0);
-  //       var v2 = new THREE.Vector3(0, 60, 0);
-  //       var v3 = new THREE.Vector3(30, 0, 0);
-
-  //       newTriangle.vertices.push(v1);
-  //       newTriangle.vertices.push(v2);
-  //       newTriangle.vertices.push(v3);
-
-  //       newTriangle.faces.push(new THREE.Face3(0, 1, 2));
-
-  //       var newMaterial = new THREE.MeshBasicMaterial({
-  //         color: 0xf35149,
-  //         // blending: THREE.AdditiveBlending,
-  //         opacity: 0.6,
-  //         // transparent: true,
-  //         wireframe: true,
-  //         wireframeLinewidth: 5
-  //       });
-  //       var newMesh = new THREE.Mesh(newTriangle, newMaterial);
-
-  //       // Set position of triangles on canvas
-  //       newMesh.position.x = Math.random() * sceneWidth + leftMost;
-  //       newMesh.position.y = Math.random() * sceneHeight + topMost;
-  //       // newMesh.scale.x += theta;
-  //       // newMesh.scale.y += theta;
-
-  //       camera.position.z += 4;
-
-  //       sceneWidth += 5;
-  //       sceneHeight += 5;
-  //       leftMost = -(sceneWidth / 2);
-  //       topMost = -(sceneHeight / 2);
-
-  //       scene.add(newMesh);
-  //     }
-  //   }
-
-  //   // // Detect a beat
-  //   // if (volAvg > beatThresh) {
-  //   //   beatThresh = volAvg * 1.5;
-  //   //   beatHold = 0;
-
-  //   //   // camera.position.z += 4;
-
-  //   //   beatcount ++
-  //   //   console.log(beatThresh);
-      
-  //   // } else {
-  //   //   if (beatTime <= beatHold) {
-  //   //     beatTime ++;
-  //   //     // beatThresh --;
-  //   //     console.log("huh");
-  //   //   } else {
-  //   //     // beatTime *= 0.9;
-  //   //     beatThresh *= 0.5;
-  //   //   }
-  //   // }
-  // }
 
   for (var i = 0; i < circleMeshes.length; i++) {
       circleMeshes[i].scale.y = maxValue/20;
