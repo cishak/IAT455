@@ -2,6 +2,8 @@ var camera;
 var scene;
 var renderer;
 
+var colours = [];
+
 var geometry;
 var material;
 var triangleMeshes = [];
@@ -17,6 +19,10 @@ var beatTime = 0;
 var beatHold = 1;
 var beatcount = 0;
 var change = 0;
+
+var INIT_RADIUS = window.innerHeight - 100;
+var SEGMENTS = 512;
+var line = new THREE.Line();
 
 var beatVals = [];
 // var sum = 0;
@@ -48,8 +54,38 @@ var topMost = -(sceneHeight / 2);
 function init() {
   freqByteData = new Uint8Array(fft.frequencyBinCount);
   timeByteData = new Uint8Array(fft.frequencyBinCount);
-  // console.log(freqByteData);
-  // console.log(buffer);
+
+  scene = new THREE.Scene();
+
+
+  //create ring geometry
+  var loopShape = new THREE.Shape();
+  loopShape.absarc( 0, 0, INIT_RADIUS, 0, Math.PI*4, true );
+  loopGeom = loopShape.createPointsGeometry(SEGMENTS/2);
+
+  var lineMaterial = new THREE.LineBasicMaterial( { 
+    color: 0xA3C68C,
+    // linewidth: 5 ,
+    opacity : 0.3,
+    // blending : THREE.AdditiveBlending,
+    depthTest : false,
+    // transparent : true
+  });
+  line.geometry = loopGeom;
+  line.material = lineMaterial;
+
+  scene.add(line);
+
+
+
+  // colours
+  colours[0] = '0xFE4365';
+  colours[1] = '0xFC9D9A';
+  colours[2] = '0xF9CDAD';
+  colours[3] = '0xC8C8A9';
+  colours[4] = '0x83AF9B';
+
+
 
   // Initialize renderer
   renderer = new THREE.WebGLRenderer({
@@ -83,83 +119,75 @@ function init() {
   camera.position.y = 0;
 
   // Initialize scene
-  scene = new THREE.Scene();
+  
 
   THREE.AdditiveBlending = 2;
 
-  
-  for (var i = 0; i < 6 ; i++) {
-    // draw triangle
-    var triangleGeometry = new THREE.Geometry();
 
-    var v1 = new THREE.Vector3(-30, 0, 0);
-    var v2 = new THREE.Vector3(0, 60, 0);
-    var v3 = new THREE.Vector3(30, 0, 0);
+  // draw center triangle
+  var triangleGeometry = new THREE.Geometry();
 
-    triangleGeometry.vertices.push(v1);
-    triangleGeometry.vertices.push(v2);
-    triangleGeometry.vertices.push(v3);
+  var v1 = new THREE.Vector3(-30, 0, 0);
+  var v2 = new THREE.Vector3(0, 60, 0);
+  var v3 = new THREE.Vector3(30, 0, 0);
 
-    triangleGeometry.faces.push(new THREE.Face3(0, 1, 2));
+  triangleGeometry.vertices.push(v1);
+  triangleGeometry.vertices.push(v2);
+  triangleGeometry.vertices.push(v3);
 
-    var triangleMaterial = new THREE.MeshBasicMaterial({
-      color: 0xf35149,
-      // blending: THREE.AdditiveBlending,
-      opacity: 1,
-      // transparent: true,
-      wireframe: true,
-      wireframeLinewidth: 3
-    });
-    var triangleMesh = new THREE.Mesh(triangleGeometry, triangleMaterial);
+  triangleGeometry.faces.push(new THREE.Face3(0, 1, 2));
 
-    // Set position of spheres on canvas
-    // mesh.position.x = Math.random() * sceneWidth + leftMost;
-    // mesh.position.y = Math.random() * sceneHeight + topMost;
+  var triangleMaterial = new THREE.MeshBasicMaterial({
+    color: 0xf35149,
+    // blending: THREE.AdditiveBlending,
+    opacity: 1,
+    // transparent: true,
+    wireframe: true,
+    wireframeLinewidth: 3
+  });
+  var triangleMesh = new THREE.Mesh(triangleGeometry, triangleMaterial);
 
-    triangleMesh.rotation.z = Math.sin(Math.PI) ;
+  // triangleMesh.rotation.z = Math.sin(Math.PI) ;
 
-    triangleMeshes.push(triangleMesh);
-    scene.add(triangleMesh);
+  triangleMeshes.push(triangleMesh);
+  scene.add(triangleMesh);
 
-    // draw circle
-    var circleMaterial = new THREE.MeshBasicMaterial({
-      color: 0x997825,
-      wireframe: true,
-      wireframeLinewidth: 3,
-      opacity: 0.6
-    })
+  // draw circle
+  // var circleMaterial = new THREE.MeshBasicMaterial({
+  //   color: 0x997825,
+  //   wireframe: true,
+  //   wireframeLinewidth: 3,
+  //   opacity: 0.6
+  // })
 
-    var radius = 35;
-    var segments = 8;
+  // var radius = 35;
+  // var segments = 8;
 
-    var circleGeometry = new THREE.CircleGeometry(radius, segments);
-    var circleMesh = new THREE.Mesh(circleGeometry, circleMaterial);
-    circleMesh.position.y = -150;
-    circleMesh.position.x = -150;
+  // var circleGeometry = new THREE.CircleGeometry(radius, segments);
+  // var circleMesh = new THREE.Mesh(circleGeometry, circleMaterial);
+  // circleMesh.position.y = -150;
+  // circleMesh.position.x = -150;
 
 
-    circleMeshes.push(circleMesh);
-    // scene.add(circleMesh);
+  // circleMeshes.push(circleMesh);
+  // // scene.add(circleMesh);
 
-    // draw circle2
-    var boxMaterial = new THREE.MeshBasicMaterial({
-      color: 0x15776E,
-      wireframe: true,
-      wireframeLinewidth: 3,
-      opacity: 0.6
-    })
+  // // draw circle2
+  // var boxMaterial = new THREE.MeshBasicMaterial({
+  //   color: 0x15776E,
+  //   wireframe: true,
+  //   wireframeLinewidth: 3,
+  //   opacity: 0.6
+  // })
 
-    var boxGeometry = new THREE.BoxGeometry(30,30,30);
-    var boxMesh = new THREE.Mesh(boxGeometry, boxMaterial);
-    boxMesh.position.y = -150;
-    boxMesh.position.x = 150;
+  // var boxGeometry = new THREE.BoxGeometry(30,30,30);
+  // var boxMesh = new THREE.Mesh(boxGeometry, boxMaterial);
+  // boxMesh.position.y = -150;
+  // boxMesh.position.x = 150;
 
-    boxMeshes.push(boxMesh);
-    // scene.add(boxMesh);
-
-    // tripinski(100,100);
-    
-  }
+  // boxMeshes.push(boxMesh);
+  // scene.add(boxMesh);
+ 
 
 
 
@@ -206,7 +234,7 @@ function init() {
   scene.add(directionalLight3);
 
   // Request audio file
-  req.open('GET', 'xx.mp3', true);
+  req.open('GET', 'olafur.mp3', true);
   req.responseType = 'arraybuffer';
 
   req.onload = function () {
@@ -272,6 +300,19 @@ function animate() {
     // console.log(beatVals);
     beatVals.pop();
 
+
+    //write current waveform into ring
+    for(var j = 0; j < SEGMENTS; j++) {
+      loopGeom.vertices[j].z = timeByteData[j]*2;//stretch by 2
+    }
+    // link up last segment
+    loopGeom.vertices[SEGMENTS].z = loopGeom.vertices[0].z;
+    loopGeom.verticesNeedUpdate = true;
+
+    
+    var maxRight = window.innerWidth/3;
+
+
     var sum = 0;
 
     for (var i = 0; i < beatVals.length; i++) {
@@ -302,9 +343,9 @@ function animate() {
 
       // console.log("inside beat");
       beatThresh = beatAvg;
-      console.log(beatThresh);
+      // console.log(beatThresh);
 
-      var material = new THREE.MeshBasicMaterial({
+      var petalMaterial = new THREE.MeshBasicMaterial({
           color: 0x997825,
           // blending: THREE.MultiplyBlending,
           opacity: 0.3,
@@ -328,7 +369,7 @@ function animate() {
       // lineGeometry.vertices.push(new THREE.Vector3(100, 0, 0));
 
       var petalGeometry = new THREE.ShapeGeometry(petalShape);
-      var petalMesh = new THREE.Mesh(petalGeometry, material);
+      var petalMesh = new THREE.Mesh(petalGeometry, petalMaterial);
       // console.log(petalMesh);
       petalMesh.rotation.z += lineLength;
       // Set position of lines on canvas
@@ -380,6 +421,9 @@ function animate() {
       beatThresh *= 0.95; // gravity on threshold
     }
   }
+
+  line.scale.y = volAvg/200;
+  line.scale.x = volAvg/200;
 
   previousMax = currentMax;
   x1 = x2;
@@ -433,11 +477,17 @@ function animate() {
       // triangleMeshes[i].position.z = 20*Math.sin(theta) + 0;  
   }
 
-
+  // var randomColour = Math.floor(Math.random()*5);
   for (var i = 0; i < petalMeshes.length; i++) {
       // Scale triangles based on audio input
+      // console.log(petalMeshes.length);
       petalMeshes[i].scale.y += volAvg/120;
       petalMeshes[i].scale.x += volAvg/120;
+
+      
+      // console.log(randomColour);
+      petalMaterial.color.setHex(colours[Math.floor(Math.random()*3)]);
+      // petalGeometry.colorsNeedUpdate = true;
       // triangleMeshes[i].position.z = 20*Math.sin(theta) + 0;  
   }
 
@@ -445,7 +495,6 @@ function animate() {
       lineSphereMeshes[i].position.z = volAvg*30;
       lineSphereMeshes[i].position.y = Math.sin(theta+i);
       lineSphereMeshes[i].position.x = Math.cos(theta+i);
-
   }
 
 
