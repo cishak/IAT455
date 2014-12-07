@@ -27,6 +27,7 @@ var SAMPLES = 1024;
 var fft =  audioContext.createAnalyser();
 fft.fftSize = SAMPLES;
 var volAvg;
+var pastDir;
 
 // Will contain amplitude data of our harmonics.
 var buffer = new Uint8Array(SAMPLES);
@@ -78,7 +79,7 @@ function init() {
   );
 
   // The position of the camera in our scene.
-  camera.position.z = 1500;
+  camera.position.z = 1000;
   camera.position.y = 0;
 
   // Initialize scene
@@ -182,7 +183,7 @@ function init() {
   scene.add(directionalLight3);
 
   // Request audio file
-  req.open('GET', 'xx.mp3', true);
+  req.open('GET', 'olafur.mp3', true);
   req.responseType = 'arraybuffer';
 
   req.onload = function () {
@@ -240,8 +241,6 @@ function animate() {
 
   beatVals.unshift(volAvg);
 
-      
-
   // var start = new Date().getTime();
   // for (var i = 0; i < 1e7; i++) {
   // if (((new Date().getTime() - start) > 200) && (beatVals.length > 10)){
@@ -288,104 +287,87 @@ function animate() {
       beatThresh = beatAvg;
       
 
-      var material = new THREE.LineBasicMaterial({
-          color: 0x997825,
-          // blending: THREE.AdditiveBlending,
-          opacity: 0.7,
-          // transparent: true,
-      })
-
-      // x1 = lineLength;
-      // y2 = lineHeight;
-      x2 = lineLength+(volAvg/10);
-      y2 = lineHeight+(volAvg/10);
-
-      var lineGeometry = new THREE.Geometry();
-      // lineGeometry.vertices.push(new THREE.Vector3(x1, y1, 0));
-      // lineGeometry.vertices.push(new THREE.Vector3(x2, y2, 0));
-      lineGeometry.vertices.push(new THREE.Vector3(x1, 0, 0));
-      lineGeometry.vertices.push(new THREE.Vector3(x1+50, -20, 0));
-      lineGeometry.vertices.push(new THREE.Vector3(x1+100, 0, 0));
-      lineGeometry.vertices.push(new THREE.Vector3(x1+50, 20, 0));
-      lineGeometry.vertices.push(new THREE.Vector3(x1+0, 0, 0));
-
-      // lineGeometry.vertices.push(new THREE.Vector3(100, 0, 0));
-
-      var line = new THREE.Line(lineGeometry, material);
-      line.rotation.z += lineLength;
-      // Set position of lines on canvas
-        // line.position.x = length;
-        // line.position.y = Math.random() * sceneHeight + topMost;
-      // line.rotation.z = lineHeight;
-
-      scene.add(line); 
-      lineLength += 5; 
-
-      if(lineLength >= sceneWidth) {
-        lineLength = 0;
-        x1 = -sceneWidth;
-        x2 = lineLength+(volAvg/10);
-      } 
-
-      if(currentMax <= previousMax) {
-        // console.log("current smaller");
-        // if(lineHeight <)
-        lineHeight -= Math.sin(theta)*volAvg;
-      } else if (currentMax > previousMax) {
-        // console.log("current bigger");
-        lineHeight += Math.sin(theta)*volAvg;
-      } 
-
-
-      // console.log(" previousmax: " + previousMax);
-      // console.log("currentmax: " + currentMax );
-
-
-
-      var lineSphereGeometry = new THREE.Geometry();
-
-      var vector = new THREE.Vector3(Math.random() * 2 - 1, Math.random() * 2 -1, Math.random() * 2 - 1);
-      vector.normalize();
-      vector.multiplyScalar(450);
-
-      lineSphereGeometry.vertices.push(vector);
-
-      var vector2 = vector.clone();
-      vector2.multiplyScalar(Math.random() * volAvg * 0.3 + 1);
-
-      lineSphereGeometry.vertices.push(vector2);
-
-      var lineSphere = new THREE.Line(lineSphereGeometry, new THREE.LineBasicMaterial({ color: 0x000000, opacity: 0.1 }));
-      lineSphereMeshes.push(lineSphere);
-      scene.add(lineSphere);
+      
 
     } else {
       beatThresh *= 0.98; // gravity on threshold
     }
   }
 
+  var material = new THREE.LineBasicMaterial({
+      color: 0x000000,
+      // blending: THREE.AdditiveBlending,
+      opacity: 0.9,
+      wireframe: true,
+      wireframeLinewidth: 5
+      // transparent: true,
+  })
+
+  // x1 = lineLength;
+  // y2 = lineHeight;
+  x2 = lineLength;
+  y2 = lineHeight;
+
+  var lineGeometry = new THREE.Geometry();
+  lineGeometry.vertices.push(new THREE.Vector3(x1, y1, 0));
+  // console.log(length);
+  lineGeometry.vertices.push(new THREE.Vector3(x2, y2, 0));
+  // lineGeometry.vertices.push(new THREE.Vector3(100, 0, 0));
+
+  var line = new THREE.Line(lineGeometry, material);
+
+  // Set position of lines on canvas
+    // line.position.x = length;
+    // line.position.y = Math.random() * sceneHeight + topMost;
+  // line.rotation.z = lineHeight;
+
+  scene.add(line); 
+  // lineLength += 10; 
+  
+
+  var direction = Math.floor(Math.random()*5);
+
+  switch (direction) {
+    case 0:
+      lineLength += volAvg*2;
+      break;
+    case 1:
+      lineLength -= volAvg*2;
+      break;
+    case 2:
+      lineHeight += volAvg*2;
+      break;
+    case 3:
+      lineHeight -= volAvg*2;
+      break;
+    default:
+      console.log("no direction");
+  }
+
+  // if(currentMax <= previousMax) {
+  //   console.log("current smaller");
+  //   lineLength -= Math.sin(volAvg);
+  // } else if (currentMax > previousMax) {
+  //   console.log("current bigger");
+  //   lineHeight += volAvg;
+  // } 
+
+
   previousMax = currentMax;
   x1 = x2;
   y1 = y2;
   
 
-
   for (var i = 0; i < circleMeshes.length; i++) {
-      // circleMeshes[i].scale.y = maxValue/20;
-      // circleMeshes[i].scale.x = maxValue/20;
-      // if(maxValue > 50) {
-      //     // circleMeshes[i].rotation.x += 0.05;
-      //     // circleMeshes[i].rotation.y += 0.05;
-      //     // console.log("maxvalue:" + maxValue);
-      //     circleMeshes[i].rotation.z +=  0.03;
-      // }
+      circleMeshes[i].scale.y = maxValue/20;
+      circleMeshes[i].scale.x = maxValue/20;
+      if(maxValue > 50) {
+          circleMeshes[i].rotation.z +=  0.03;
+      }
 
       boxMeshes[i].scale.y = minValue/20;
       boxMeshes[i].scale.x = minValue/20;
       if(minValue < 30) {
-          // circleMeshes[i].rotation.x += 0.05;
-          // circleMeshes[i].rotation.y += 0.05;
-          // console.log("minValue:" + minValue);
           boxMeshes[i].rotation.z -=  0.01;
       }
   }
@@ -395,35 +377,7 @@ function animate() {
       // Scale triangles based on audio input
       triangleMeshes[i].scale.y = volAvg/30;
       triangleMeshes[i].scale.x = volAvg/30;
-      // triangleMeshes[i].position.z = 20*Math.sin(theta) + 0;  
-
   }
-
-  for (var i = 0; i < lineSphereMeshes.length; i++) {
-      // Scale triangles based on audio input
-      // lineSphereMeshes[i].scale.x = volAvg/30;
-      // lineSphereMeshes[i].scale.y = volAvg/30;
-      // lineSphereMeshes[i].scale.z = volAvg/30;
-      // lineSphereMeshes[i].rotation.x = volAvg/30;
-      lineSphereMeshes[i].position.y = volAvg;
-
-  }
-
-  // camera.position.z = (volAvg) + 1000;
-
-  // for (var i = 0; i < triangleFractal.length; i++) {
-      // Scale triangles based on audio input 
-
-      // triangleFractal[i].scale.y = volAvg/10;
-      // triangleFractal[i].scale.x = volAvg/10;
-
-      // if(volAvg < 50) {
-          // tripinski(volAvg*2,volAvg*2);
-      // }
-      // if the volAvg is small, draw less triangle
-      //   if the volavg is big, draw more triangle
-  // }
-
 
   camera.lookAt(scene.position);
 
