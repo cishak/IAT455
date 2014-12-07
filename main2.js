@@ -40,14 +40,9 @@ function init() {
     var material = new THREE.LineBasicMaterial( { 
       color: 0xff0000,
       // linewidth: 5 ,
-<<<<<<< HEAD
       opacity : 0.3,
       // blending : THREE.AdditiveBlending,
       depthTest : false,
-=======
-      opacity : 0.2,
-      // depthTest : false,
->>>>>>> 986845edd4e74c21f442174016e6e77f8ea224ad
       // transparent : true
     });
     
@@ -117,12 +112,7 @@ function init() {
   // var topMost = -(sceneHeight / 2);
 
   // Initialize renderer
-<<<<<<< HEAD
-    renderer = new THREE.WebGLRenderer({
-      alpha: true,
-      autoClear: false,
-      preserveDrawingBuffer: true
-=======
+
   renderer = new THREE.WebGLRenderer({
     alpha: true,
     autoClear:false,
@@ -171,7 +161,6 @@ function init() {
 
       src.start();
       animate();
->>>>>>> 986845edd4e74c21f442174016e6e77f8ea224ad
     });
 
     // Set size of renderer
@@ -317,7 +306,6 @@ function animate() {
 
   line.scale.y = volAvg/40;
   line.scale.x = volAvg/40;
-<<<<<<< HEAD
   var maxRight = window.innerWidth/3;
   // console.log(maxRight);
   // if(line.position.x < maxRight ) {
@@ -327,9 +315,7 @@ function animate() {
   // }
   // line.position.y -= volAvg/1600;
   // line.position.z = volAvg/40;
-=======
   // line.rotation.y = volAvg/40;
->>>>>>> 986845edd4e74c21f442174016e6e77f8ea224ad
 
   requestAnimationFrame(animate);
 

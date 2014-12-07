@@ -50,8 +50,6 @@ var topMost = -(sceneHeight / 2);
 function init() {
   freqByteData = new Uint8Array(fft.frequencyBinCount);
   timeByteData = new Uint8Array(fft.frequencyBinCount);
-  // console.log(freqByteData);
-  // console.log(buffer);
 
   // Initialize renderer
   renderer = new THREE.WebGLRenderer({
@@ -138,10 +136,7 @@ function init() {
     var circleMesh = new THREE.Mesh(circleGeometry, circleMaterial);
     circleMesh.position.y = -150;
     circleMesh.position.x = -150;
-
-
     circleMeshes.push(circleMesh);
-    // scene.add(circleMesh);
 
     // draw circle2
     var boxMaterial = new THREE.MeshBasicMaterial({
@@ -159,8 +154,26 @@ function init() {
     boxMeshes.push(boxMesh);
     scene.add(boxMesh);
 
-    // tripinski(100,100);
-    
+  }
+
+  // Lines around border
+  for (var i=0; i<40; i++) {
+    var lineSphereGeometry = new THREE.Geometry();
+
+    var vector = new THREE.Vector3(Math.random() * 2 - 1, Math.random() * 2 -1, Math.random() * 2 - 1);
+    vector.normalize();
+    vector.multiplyScalar(450 + volAvg);
+
+    lineSphereGeometry.vertices.push(vector);
+
+    var vector2 = vector.clone();
+    vector2.multiplyScalar(Math.random() * volAvg * 0.3 + 1);
+
+    lineSphereGeometry.vertices.push(vector2);
+
+    var lineSphere = new THREE.Line(lineSphereGeometry, new THREE.LineBasicMaterial({ color: 0x000000, opacity: 0.1 }));
+    lineSphereMeshes.push(lineSphere);
+    scene.add(lineSphere);
   }
 
 
@@ -274,17 +287,6 @@ function animate() {
 
   beatVals.unshift(volAvg);
 
-      
-
-  // var start = new Date().getTime();
-  // for (var i = 0; i < 1e7; i++) {
-  // if (((new Date().getTime() - start) > 200) && (beatVals.length > 10)){
-  //     break;
-  //   }
-  // }
-  // console.log("waited");
-
-  // var maxValue = 0;
 
   if ((change % 10 == 0) && (beatVals.length > 10)) {
     beatVals.length = 10;
@@ -301,28 +303,25 @@ function animate() {
     var start = new Date().getTime();
 
 
+    // // Lines around border
+    // var lineSphereGeometry = new THREE.Geometry();
 
+    // var vector = new THREE.Vector3(Math.random() * 2 - 1, Math.random() * 2 -1, Math.random() * 2 - 1);
+    // vector.normalize();
+    // vector.multiplyScalar(450 + volAvg);
 
-    // for (var i=0; i<20; i++) {
-    var lineSphereGeometry = new THREE.Geometry();
+    // lineSphereGeometry.vertices.push(vector);
 
-    var vector = new THREE.Vector3(Math.random() * 2 - 1, Math.random() * 2 -1, Math.random() * 2 - 1);
-    vector.normalize();
-    vector.multiplyScalar(450 + volAvg);
+    // var vector2 = vector.clone();
+    // vector2.multiplyScalar(Math.random() * volAvg * 0.3 + 1);
 
-    lineSphereGeometry.vertices.push(vector);
+    // lineSphereGeometry.vertices.push(vector2);
 
-    var vector2 = vector.clone();
-    vector2.multiplyScalar(Math.random() * volAvg * 0.3 + 1);
+    // var lineSphere = new THREE.Line(lineSphereGeometry, new THREE.LineBasicMaterial({ color: 0x000000, opacity: 0.1 }));
+    // lineSphereMeshes.push(lineSphere);
+    // scene.add(lineSphere);
 
-    lineSphereGeometry.vertices.push(vector2);
-
-    var lineSphere = new THREE.Line(lineSphereGeometry, new THREE.LineBasicMaterial({ color: 0x000000, opacity: 0.1 }));
-    lineSphereMeshes.push(lineSphere);
-    scene.add(lineSphere);
-  // }
-
-
+    // Animate border lines to the volume
     for (var i = 0; i < lineSphereMeshes.length; i++) {
         lineSphereMeshes[i].position.z = volAvg*30;
         lineSphereMeshes[i].position.y = Math.sin(theta+i);
