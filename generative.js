@@ -154,7 +154,7 @@ function init() {
     boxMesh.position.x = 150;
 
     boxMeshes.push(boxMesh);
-    scene.add(boxMesh);
+    // scene.add(boxMesh);
 
     // tripinski(100,100);
     
@@ -211,6 +211,8 @@ var currentMax = 0;
 var previousMax = 0;
 var x1 = 0, y1 = 0, x2, y2 = 0;
 var lineMeshes = [];
+var beatCount = 0;
+var petalMeshes = [];
 
 
 function animate() {
@@ -291,11 +293,11 @@ function animate() {
       beatThresh = beatAvg;
       
 
-      var material = new THREE.LineBasicMaterial({
+      var material = new THREE.MeshBasicMaterial({
           color: 0x997825,
-          // blending: THREE.AdditiveBlending,
-          opacity: 0.7,
-          // transparent: true,
+          // blending: THREE.MultiplyBlending,
+          opacity: 0.3,
+          transparent: true
       })
 
       // x1 = lineLength;
@@ -303,30 +305,32 @@ function animate() {
       x2 = lineLength+(volAvg/10);
       y2 = lineHeight+(volAvg/10);
 
-      var lineGeometry = new THREE.Geometry();
+      var petalShape = new THREE.Shape();
       // lineGeometry.vertices.push(new THREE.Vector3(x1, y1, 0));
       // lineGeometry.vertices.push(new THREE.Vector3(x2, y2, 0));
-      lineGeometry.vertices.push(new THREE.Vector3(x1, 0, 0));
-      lineGeometry.vertices.push(new THREE.Vector3(x1+50, -20, 0));
-      lineGeometry.vertices.push(new THREE.Vector3(x1+100, 0, 0));
-      lineGeometry.vertices.push(new THREE.Vector3(x1+50, 20, 0));
-      lineGeometry.vertices.push(new THREE.Vector3(x1+0, 0, 0));
+      petalShape.moveTo(x1, 0);
+      petalShape.lineTo(x1+volAvg, -20);
+      petalShape.lineTo(x1+(volAvg*3), 0);
+      petalShape.lineTo(x1+volAvg, 20);
+      petalShape.lineTo(x1, 0);
 
       // lineGeometry.vertices.push(new THREE.Vector3(100, 0, 0));
 
-      var line = new THREE.Line(lineGeometry, material);
-      line.rotation.z += lineLength;
+      var petalGeometry = new THREE.ShapeGeometry(petalShape);
+      var petalMesh = new THREE.Mesh(petalGeometry, material);
+      // console.log(petalMesh);
+      petalMesh.rotation.z += lineLength;
       // Set position of lines on canvas
         // line.position.x = length;
         // line.position.y = Math.random() * sceneHeight + topMost;
       // line.rotation.z = lineHeight;
-
-      scene.add(line); 
+      petalMeshes.push(petalMesh);
+      scene.add(petalMesh); 
       lineLength += 5; 
 
-      if(lineLength >= sceneWidth) {
+      if(lineLength >= 100) {
         lineLength = 0;
-        x1 = -sceneWidth;
+        x1 = 50;
         x2 = lineLength+(volAvg/10);
       } 
 
@@ -373,25 +377,25 @@ function animate() {
   
 
 
-  for (var i = 0; i < circleMeshes.length; i++) {
-      // circleMeshes[i].scale.y = maxValue/20;
-      // circleMeshes[i].scale.x = maxValue/20;
-      // if(maxValue > 50) {
-      //     // circleMeshes[i].rotation.x += 0.05;
-      //     // circleMeshes[i].rotation.y += 0.05;
-      //     // console.log("maxvalue:" + maxValue);
-      //     circleMeshes[i].rotation.z +=  0.03;
-      // }
+  // for (var i = 0; i < circleMeshes.length; i++) {
+  //     // circleMeshes[i].scale.y = maxValue/20;
+  //     // circleMeshes[i].scale.x = maxValue/20;
+  //     // if(maxValue > 50) {
+  //     //     // circleMeshes[i].rotation.x += 0.05;
+  //     //     // circleMeshes[i].rotation.y += 0.05;
+  //     //     // console.log("maxvalue:" + maxValue);
+  //     //     circleMeshes[i].rotation.z +=  0.03;
+  //     // }
 
-      boxMeshes[i].scale.y = minValue/20;
-      boxMeshes[i].scale.x = minValue/20;
-      if(minValue < 30) {
-          // circleMeshes[i].rotation.x += 0.05;
-          // circleMeshes[i].rotation.y += 0.05;
-          // console.log("minValue:" + minValue);
-          boxMeshes[i].rotation.z -=  0.01;
-      }
-  }
+  //     boxMeshes[i].scale.y = minValue/20;
+  //     boxMeshes[i].scale.x = minValue/20;
+  //     if(minValue < 30) {
+  //         // circleMeshes[i].rotation.x += 0.05;
+  //         // circleMeshes[i].rotation.y += 0.05;
+  //         // console.log("minValue:" + minValue);
+  //         boxMeshes[i].rotation.z -=  0.01;
+  //     }
+  // }
 
 
   for (var i = 0; i < triangleMeshes.length; i++) {
@@ -399,18 +403,24 @@ function animate() {
       triangleMeshes[i].scale.y = volAvg/30;
       triangleMeshes[i].scale.x = volAvg/30;
       // triangleMeshes[i].position.z = 20*Math.sin(theta) + 0;  
-
   }
 
-  for (var i = 0; i < lineSphereMeshes.length; i++) {
+
+  for (var i = 0; i < petalMeshes.length; i++) {
       // Scale triangles based on audio input
-      // lineSphereMeshes[i].scale.x = volAvg/30;
-      // lineSphereMeshes[i].scale.y = volAvg/30;
-      // lineSphereMeshes[i].scale.z = volAvg/30;
-      lineSphereMeshes[i].position.y = volAvg;
-
-
+      petalMeshes[i].scale.y += volAvg/120;
+      petalMeshes[i].scale.x += volAvg/120;
+      // triangleMeshes[i].position.z = 20*Math.sin(theta) + 0;  
   }
+  // for (var i = 0; i < lineSphereMeshes.length; i++) {
+  //     // Scale triangles based on audio input
+  //     // lineSphereMeshes[i].scale.x = volAvg/30;
+  //     // lineSphereMeshes[i].scale.y = volAvg/30;
+  //     // lineSphereMeshes[i].scale.z = volAvg/30;
+  //     lineSphereMeshes[i].position.y = volAvg;
+
+
+  // }
 
   // camera.position.z = (volAvg) + 1000;
 
