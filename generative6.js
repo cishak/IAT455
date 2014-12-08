@@ -2,10 +2,7 @@ var camera;
 var scene;
 var renderer;
 
-var triangleMeshes = [];
 var lineSphereMeshes = [];
-
-var colours = [];
 
 var BIN_COUNT = 512;
 var beatThresh = 1;
@@ -19,6 +16,10 @@ var PARTICLES_COUNT = 15;
 var particles;
 var particlesMaterial;
 var particlesHue = 0;
+
+var INIT_RADIUS = 350;
+var loopGeom;
+var line = new THREE.Line();
 
 var audioContext = new AudioContext();
 var SAMPLES = 1024;
@@ -41,13 +42,7 @@ var topMost = -(sceneHeight / 2);
 // Scene setup
 function init() {
   freqByteData = new Uint8Array(fft.frequencyBinCount);
-
-  // colours
-  colours[0] = '0xFE4365';
-  colours[1] = '0xFC9D9A';
-  colours[2] = '0xF9CDAD';
-  colours[3] = '0xC8C8A9';
-  colours[4] = '0x83AF9B';
+  timeByteData = new Uint8Array(fft.frequencyBinCount);
 
   // Initialize renderer
   renderer = new THREE.WebGLRenderer({
@@ -104,33 +99,59 @@ function init() {
   req.send();
 
 
+  // Create ring geometry
+  var loopShape = new THREE.Shape();
+  loopShape.absarc( 0, 0, INIT_RADIUS, 0, Math.PI*4, true );
+  loopGeom = loopShape.createPointsGeometry(BIN_COUNT/2);
 
-  // Draw center triangle
-  var triangleGeometry = new THREE.Geometry();
+  scene = new THREE.Scene();
 
-  var v1 = new THREE.Vector3(-30, -30, 1000);
-  var v2 = new THREE.Vector3(0, 30, 1000);
-  var v3 = new THREE.Vector3(30, -30, 1000);
-
-  triangleGeometry.vertices.push(v1);
-  triangleGeometry.vertices.push(v2);
-  triangleGeometry.vertices.push(v3);
-
-  triangleGeometry.faces.push(new THREE.Face3(0, 1, 2));
-
-  var triangleMaterial = new THREE.MeshBasicMaterial({
-    color: 0xf35149,
-    // blending: THREE.AdditiveBlending,
-    opacity: 1,
-    wireframe: true,
-    wireframeLinewidth: 3
+  var material = new THREE.LineBasicMaterial( { 
+    color: 0xffffff,
+    opacity : 0.1,
+    depthTest : false,
+    transparent: true
   });
 
-  var triangleMesh = new THREE.Mesh(triangleGeometry, triangleMaterial);
-  triangleMeshes.push(triangleMesh);
-  scene.add(triangleMesh);
+  line.geometry = loopGeom;
+  line.material = material;
+
+  scene.add(line);
 
 
+  /***********************************
+   * Particle code2 by Salehen Rahman *
+   ***********************************/
+
+  particles2 = new THREE.Geometry();
+
+  // Create new particle material
+  particlesMaterial2 = new THREE.PointCloudMaterial( {
+    size: 40,
+    opacity: 0.1,
+    map: THREE.ImageUtils.loadTexture(
+      'orbs.png'
+    ),
+    transparent: true,
+    depthWrite: false,
+  } );
+ 
+  // Add the particles to geometry
+  for (var i = 0; i < PARTICLES_COUNT; i++) {
+ 
+    // Assign 3D coordinates of particles
+    var x2 = (Math.random()%50) * sceneWidth*2 + leftMost*2;
+    var y2 = (Math.random()%50) * sceneHeight*2 + topMost*2;
+    var z2 = 10;
+ 
+    // Push coordinates to vector
+    var vertex2 = new THREE.Vector3(x2, y2, z2);
+    particles2.vertices.push( vertex2 );
+  }
+ 
+  // Initialize our mesh from our geometry and material.
+  var pointCloud = new THREE.PointCloud( particles2, particlesMaterial2 );
+  scene.add( pointCloud );
 
   /***********************************
    * Particle code by Salehen Rahman *
@@ -140,7 +161,7 @@ function init() {
 
   // Create new particle material
   particlesMaterial = new THREE.PointCloudMaterial( {
-    size: 40,
+    size: 80,
     opacity: 0.4,
     map: THREE.ImageUtils.loadTexture(
       'orbs.png'
@@ -153,8 +174,8 @@ function init() {
   for (var i = 0; i < PARTICLES_COUNT; i++) {
  
     // Assign 3D coordinates of particles
-    var x = (Math.random()%50) * sceneWidth*2 + leftMost*2;
-    var y = (Math.random()%50) * sceneHeight*2 + topMost*2;
+    var x = 0;
+    var y = 0;
     var z = 10;
  
     // Push coordinates to vector
@@ -163,8 +184,8 @@ function init() {
   }
  
   // Initialize our mesh from our geometry and material.
-  var pointCloud = new THREE.PointCloud( particles, particlesMaterial );
-  scene.add( pointCloud );
+  particleSystem = new THREE.ParticleSystem( particles, particlesMaterial );
+  scene.add( particleSystem );
 }
 
 var theta = 0;
@@ -186,6 +207,7 @@ function animate() {
 
   // Grabbing audio data
   fft.getByteFrequencyData(freqByteData);
+  fft.getByteTimeDomainData(timeByteData);
 
   var time = clock.getDelta();
   theta += time * 0.1;
@@ -198,12 +220,23 @@ function animate() {
   }
   volAvg = volume / BIN_COUNT;
 
+  // Add volume to an array
   beatVals.unshift(volAvg);
 
 
   if ((change % 9 == 0) && (beatVals.length > 9)) {
     beatVals.length = 9;
     beatVals.pop();
+
+
+    // Draw center ring
+    for(var j = 0; j < BIN_COUNT; j++) {
+      loopGeom.vertices[j].z = timeByteData[j]*2;//stretch by 2
+    }
+    // Link up last segment of ring
+    loopGeom.vertices[BIN_COUNT].z = loopGeom.vertices[0].z;
+    loopGeom.verticesNeedUpdate = true;
+
 
     var sum = 0;
 
@@ -245,18 +278,15 @@ function animate() {
 
       // Modify particle colours
       particlesHue = (particlesHue + time/10)%1;
-      // particlesMaterial.color.setHSL( (particlesHue), 1, 0.7 );
+      particlesMaterial.color.setHSL( (particlesHue), 1, 0.7 );
 
 
 
-      if(volAvg <= divider) {
-        // console.log("low");
+      if(volAvg <= divider) { // low volume
         drawFlower(volAvg, getLowHue(), petalMeshesLow);
-      } else if(volAvg <= divider*2 && volAvg >= divider) {
-        // console.log("medium");
+      } else if(volAvg <= divider*2 && volAvg >= divider) { // medium volume
         drawFlower(volAvg, getMedHue(), petalMeshesMedium);
-      } else if(volAvg >= divider*2 && volAvg <= BIN_COUNT) {
-        // console.log("high");
+      } else if(volAvg >= divider*2 && volAvg <= BIN_COUNT) { // high volume
         drawFlower(volAvg, getHighHue(), petalMeshesHigh);
       }
 
@@ -288,16 +318,13 @@ function animate() {
     }
   }
 
+
+  line.scale.y = volAvg/50;
+  line.scale.x = volAvg/50;
+
   previousMax = currentMax;
   x1 = x2;
   y1 = y2;
-  
-
-  for (var i = 0; i < triangleMeshes.length; i++) {
-      // Scale triangles based on audio input
-      triangleMeshes[i].scale.y = volAvg/30;
-      triangleMeshes[i].scale.x = volAvg/30;
-  }
 
   for (var i = 0; i < petalMeshesLow.length; i++) {
       // Scale triangles based on audio input
@@ -351,17 +378,38 @@ function animate() {
 
 
   /***********************************
-   * Particle code by Salehen Rahman *
+   * Particle code 2 by Salehen Rahman *
    ***********************************/
 
   // Update particle positions
-  for (var i = 0; i < particles.vertices.length; i++) {
-    particles.vertices[i].x = Math.sin(theta+i)* window.innerHeight;
-    particles.vertices[i].z = Math.cos(theta+i*5)* window.innerHeight;
+  for (var i = 0; i < particles2.vertices.length; i++) {
+    particles2.vertices[i].x = Math.sin(theta+i)* window.innerHeight;
+    particles2.vertices[i].z = Math.cos(theta+i*5)* window.innerHeight;
+  }
+  particles2.verticesNeedUpdate = true;
 
-    // particles.vertices[i].z = volAvg*10;
+
+  /***********************************
+   * Particle code by Salehen Rahman *
+   ***********************************/
+
+  // Update center particle positions
+  for (var i = 0; i < particles.vertices.length; i++) {
+
+    if (particles.vertices[i].x > 100 || particles.vertices[i].x < -100) {
+      particles.vertices[i].x = 0;
+    } else {
+      particles.vertices[i].x += Math.random()*Math.sin(theta+i)*volAvg/30;
+    }
+
+    if (particles.vertices[i].y > 100 || particles.vertices[i].y < -100) {
+      particles.vertices[i].y = 0;
+    } else {
+      particles.vertices[i].y -= Math.random()*Math.cos(theta+i*5)*volAvg/30;
+    }
   }
   particles.verticesNeedUpdate = true;
+
 
   camera.lookAt(scene.position);
   renderer.render(scene, camera);
