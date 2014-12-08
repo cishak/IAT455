@@ -39,6 +39,19 @@ var sceneHeight = window.innerHeight;
 var leftMost = -(sceneWidth / 2);
 var topMost = -(sceneHeight / 2);
 
+var theta = 0;
+var scaleFactor = 0;
+var lineLength = 0;
+var lineHeight = 0;
+var currentMax = 0;
+var previousMax = 0;
+var x1 = 0, y1 = 0, x2, y2 = 0;
+var petalMeshesLow = [];
+var petalMeshesHigh = [];
+var petalMeshesMedium = [];
+var rotationAngle = 5;
+var highestBeat = 0;
+
 
 /***********************************
  * Initialize scene
@@ -77,7 +90,7 @@ function init() {
   // The position of the camera in our scene.
   camera.position.z = 1500;
 
-  // Initialize scene
+  // Initialize 3D scene
   scene = new THREE.Scene();
 
   // Request audio file
@@ -104,6 +117,7 @@ function init() {
 
   /***********************************
    * Draw central ring
+   * credits to http://airtightinteractive.com/demos/js/reactive/
    ***********************************/
   var loopShape = new THREE.Shape();
   loopShape.absarc( 0, 0, INIT_RADIUS, 0, Math.PI*4, true );
@@ -125,7 +139,8 @@ function init() {
 
 
   /***********************************
-   * Wandering particles
+   * Wandering particles 
+   * based on the code from Salehen Rahman  
    ***********************************/
   particles2 = new THREE.Geometry();
 
@@ -159,7 +174,7 @@ function init() {
 
 
   /***********************************
-   * Particle cluster
+   * Particle cluster at the center
    ***********************************/
   particles = new THREE.Geometry();
 
@@ -190,19 +205,6 @@ function init() {
   particleSystem = new THREE.ParticleSystem( particles, particlesMaterial );
   scene.add( particleSystem );
 }
-
-var theta = 0;
-var scaleFactor = 0;
-var lineLength = 0;
-var lineHeight = 0;
-var currentMax = 0;
-var previousMax = 0;
-var x1 = 0, y1 = 0, x2, y2 = 0;
-var petalMeshesLow = [];
-var petalMeshesHigh = [];
-var petalMeshesMedium = [];
-var rotationAngle = 5;
-var highestBeat = 0;
 
 
 /***********************************
@@ -253,6 +255,7 @@ function animate() {
 
     /***********************************
     * Dynamic beat detection
+    * credits to Matt Lockyer
     ***********************************/
     if (beatAvg > beatThresh) {
       
@@ -266,6 +269,7 @@ function animate() {
       }
       currentMax = maxValue;
 
+      // update highest beat as the program goes
       if(highestBeat < maxValue) {
         highestBeat = maxValue;
       }
@@ -288,6 +292,7 @@ function animate() {
       ***********************************/
       var divider = highestBeat/3;
 
+      // draw different color petal depending on the beat
       if(volAvg <= divider) { // low volume
         drawFlower(volAvg, getLowHue(), petalMeshesLow);
       } else if(volAvg <= divider*2 && volAvg >= divider) { // medium volume
@@ -296,9 +301,9 @@ function animate() {
         drawFlower(volAvg, getHighHue(), petalMeshesHigh);
       }
 
-
       /***********************************
       * Animate lines around border to the beat
+      * credits to https://threejsdoc.appspot.com/doc/three.js/examples/canvas_lines_sphere.html
       ***********************************/
       var lineSphereGeometry = new THREE.Geometry();
 
@@ -458,7 +463,6 @@ function animate() {
   }
   particles.verticesNeedUpdate = true;
 
-
   camera.lookAt(scene.position);
   renderer.render(scene, camera);
 }
@@ -468,6 +472,7 @@ function animate() {
 * Draw flower petals
 ***************************************************/
 function drawFlower(volAvg, color, array) {
+  // material for petal
   var material = new THREE.MeshBasicMaterial({
       opacity: 0.2,
       transparent: true
@@ -479,6 +484,7 @@ function drawFlower(volAvg, color, array) {
   x2 = lineLength + (volAvg/10);
   y2 = lineHeight + (volAvg/10);
 
+  // draw petal shape
   var petalShape = new THREE.Shape();
   petalShape.moveTo(x1, 0);
   petalShape.lineTo((x1+volAvg)/2, -10);
@@ -508,6 +514,7 @@ function drawFlower(volAvg, color, array) {
     lineHeight += Math.sin(theta)*volAvg;
   } 
 }
+
 
 /***************************************************
 * Pick a random reddish hue for High beats
