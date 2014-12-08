@@ -276,7 +276,6 @@ function animate() {
 
       var lineMaterial = new THREE.LineBasicMaterial({
         color: 0xffffff,
-        blending: THREE.AdditiveBlending,
         opacity: 0.08,
         transparent: true
       });
@@ -364,7 +363,6 @@ function animate() {
   }
   particles.verticesNeedUpdate = true;
 
-
   camera.lookAt(scene.position);
   renderer.render(scene, camera);
 }
@@ -372,13 +370,9 @@ function animate() {
 
 function drawFlower(volAvg, color, array) {
   var material = new THREE.MeshBasicMaterial({
-      // color: petalColor,
-      // blending: THREE.AdditiveBlending,
       opacity: 0.2,
       transparent: true
   })
-
-  // material.color.setHSL( (petalColor), 1, 0.7 );
   material.color.setHSL(color, ((Math.random()*30)+80) / 100, ((Math.random()*10)+50) / 100);
 
   x2 = lineLength + (volAvg/10);
@@ -390,7 +384,6 @@ function drawFlower(volAvg, color, array) {
   petalShape.lineTo((x1+(volAvg*5))/2, 0);
   petalShape.lineTo((x1+volAvg)/2, 10);
   petalShape.lineTo(x1, 0);
-
 
   var petalGeometry = new THREE.ShapeGeometry(petalShape);
   var petalMesh = new THREE.Mesh(petalGeometry, material);
@@ -416,7 +409,6 @@ function drawFlower(volAvg, color, array) {
 
 function getHighHue() {
   var h = ((Math.random()*20)) / 255; // RED
-  
   return h;
 }
 
