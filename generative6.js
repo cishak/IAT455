@@ -83,7 +83,7 @@ function init() {
   scene = new THREE.Scene();
 
   // Request audio file
-  req.open('GET', 'olafur.mp3', true);
+  req.open('GET', 'xx.mp3', true);
   req.responseType = 'arraybuffer';
 
   req.onload = function () {
