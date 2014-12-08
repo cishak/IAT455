@@ -83,7 +83,7 @@ function init() {
   scene = new THREE.Scene();
 
   // Request audio file
-  req.open('GET', 'olafur.mp3', true);
+  req.open('GET', 'xx.mp3', true);
   req.responseType = 'arraybuffer';
 
   req.onload = function () {
@@ -379,7 +379,7 @@ function drawFlower(volAvg, color, array) {
   })
 
   // material.color.setHSL( (petalColor), 1, 0.7 );
-  material.color.setHSL(color, ((Math.random()*10)+90) / 100, ((Math.random()*10)+60) / 100);
+  material.color.setHSL(color, ((Math.random()*30)+80) / 100, ((Math.random()*10)+50) / 100);
 
   x2 = lineLength + (volAvg/10);
   y2 = lineHeight + (volAvg/10);
@@ -415,25 +415,19 @@ function drawFlower(volAvg, color, array) {
 
 
 function getHighHue() {
-  var h = ((Math.random()*30)+100) / 255; // BLUE
-    // var h = ((Math.random()*20) + 40) / 255;
-  // var h = Math.random(30, 50);
-    console.log(h);
-    return h;
+  var h = ((Math.random()*20)) / 255; // RED
+  
+  return h;
 }
 
 function getMedHue() {
-  // var h = ((Math.random()*30)+30) / 255;
-    var h = ((Math.random()*30)) / 255; // RED
-    // var h = Math.random(0, 10);
-    return h;
+  var h = ((Math.random()*30)+120) / 255; // BLUE
+  return h;
 }
 
 function getLowHue() {
   var h = ((Math.random()*30)+30) / 255; // YELLOW
-    // var h = ((Math.random()*20) + 150) / 255;
-    // var h = Math.random(170, 190);
-    return h;
+  return h;
 }
 
 init();
