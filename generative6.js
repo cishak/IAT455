@@ -161,7 +161,7 @@ function init() {
 
   // Create new particle material
   particlesMaterial = new THREE.PointCloudMaterial( {
-    size: 80,
+    size: 40,
     opacity: 0.4,
     map: THREE.ImageUtils.loadTexture(
       'orbs.png'
@@ -177,7 +177,7 @@ function init() {
     // Assign 3D coordinates of particles
     var x = 0;
     var y = 0;
-    var z = 10;
+    var z = 600;
  
     // Push coordinates to vector
     var vertex = new THREE.Vector3(x, y, z);
@@ -341,7 +341,7 @@ function animate() {
         petalMeshesLow[i].scale.x += 0.001;
       }
 
-      petalMeshesLow[i].rotation.z += 0.001;
+      petalMeshesLow[i].rotation.z += 0.001*volAvg/10;
   }
 
   for (var i = 0; i < petalMeshesMedium.length; i++) {
@@ -357,7 +357,7 @@ function animate() {
         petalMeshesMedium[i].scale.x += 0.001;
       }
 
-      petalMeshesMedium[i].rotation.z += 0.0008;
+      petalMeshesMedium[i].rotation.z += 0.0008*volAvg/10;
   }
 
   for (var i = 0; i < petalMeshesHigh.length; i++) {
@@ -374,7 +374,7 @@ function animate() {
         petalMeshesHigh[i].scale.x += 0.001;
       }
 
-      petalMeshesHigh[i].rotation.z += 0.0005;
+      petalMeshesHigh[i].rotation.z += 0.0005*volAvg/10;
   }
 
   for (var i = 0; i < lineSphereMeshes.length; i++) {
@@ -403,13 +403,13 @@ function animate() {
   // Update center particle positions
   for (var i = 0; i < particles.vertices.length; i++) {
 
-    if (particles.vertices[i].x > 60 || particles.vertices[i].x < -60) {
+    if (particles.vertices[i].x > 50 || particles.vertices[i].x < -50) {
       particles.vertices[i].x = 0;
     } else {
       particles.vertices[i].x += Math.random()*Math.sin(theta+i)*volAvg/30;
     }
 
-    if (particles.vertices[i].y > 60 || particles.vertices[i].y < -60) {
+    if (particles.vertices[i].y > 50 || particles.vertices[i].y < -50) {
       particles.vertices[i].y = 0;
     } else {
       particles.vertices[i].y -= Math.random()*Math.cos(theta+i*5)*volAvg/30;
