@@ -281,7 +281,7 @@ function animate() {
       if(highestBeat < maxValue) {
         highestBeat = maxValue;
       }
-      console.log(highestBeat);
+      // console.log(highestBeat);
 
       minValue = beatVals[0];
 
@@ -302,13 +302,13 @@ function animate() {
 
 
       if(volAvg <= divider) {
-        console.log("low");
+        // console.log("low");
         drawFlower(volAvg,0x997825);
       } else if(volAvg <= divider*2 && volAvg >= divider) {
-        console.log("medium");
+        // console.log("medium");
         drawFlower(volAvg,0x000000);
       } else if(volAvg >= divider*2 && volAvg <= BIN_COUNT) {
-        console.log("high");
+        // console.log("high");
         drawFlower(volAvg,0x15776E);
       }
 

@@ -15,11 +15,11 @@ var beatVals = [];
 var maxValue;
 var minValue;
 
-// var PARTICLES_COUNT = 15;
-// var particles = [];
-// var particlesMaterial;
-// var particlesHue = 0;
-var particles
+var PARTICLES_COUNT = 15;
+var particles;
+var particlesMaterial;
+var particlesHue = 0;
+var particleSystem;
 
 var audioContext = new AudioContext();
 var SAMPLES = 1024;
@@ -84,7 +84,7 @@ function init() {
   scene = new THREE.Scene();
 
   // Request audio file
-  req.open('GET', 'olafur.mp3', true);
+  req.open('GET', 'xx.mp3', true);
   req.responseType = 'arraybuffer';
 
   req.onload = function () {
@@ -129,48 +129,45 @@ function init() {
 
   var triangleMesh = new THREE.Mesh(triangleGeometry, triangleMaterial);
   triangleMeshes.push(triangleMesh);
-  scene.add(triangleMesh);
+  // scene.add(triangleMesh);
 
 
 
-  // create the particle variables
-  var particleCount = 1800;
+  /***********************************
+   * Particle code by Salehen Rahman *
+   ***********************************/
+
   particles = new THREE.Geometry();
-  var pMaterial = new THREE.ParticleBasicMaterial({
-        color: 0xFFFFFF,
-        size: 20
-      });
 
-  // now create the individual particles
-  for (var p = 0; p < particleCount; p++) {
-
-    // create a particle with random
-    // position values, -250 -> 250
-    var pX = Math.random() * 500 - 250,
-        pY = Math.random() * 500 - 250,
-        pZ = Math.random() * 500 - 250;
-
-
+  // Create new particle material
+  particlesMaterial = new THREE.PointCloudMaterial( {
+    size: 40,
+    opacity: 0.4,
+    map: THREE.ImageUtils.loadTexture(
+      'orbs.png'
+    ),
+    transparent: true,
+    depthWrite: false,
+  } );
+ 
+  // Add the particles to geometry
+  for (var i = 0; i < PARTICLES_COUNT; i++) {
+ 
+    // Assign 3D coordinates of particles
+    // var x = (Math.random()%50) * sceneWidth*2 + leftMost*2;
+    var x = 0;
+    var y = 0;
+    var z = 10;
+ 
     // Push coordinates to vector
-    var vertex = new THREE.Vector3(pX, pY, pX);
+    var vertex = new THREE.Vector3(x, y, z);
     particles.vertices.push( vertex );
-        // particle.vertices.push(
-        //   new THREE.Vector3(pX, pY, pZ)
-        // );
-
-    // add it to the geometry
-    particles.vertices.push(particle);
   }
-
-  // create the particle system
-  var particleSystem = new THREE.ParticleSystem(
-      particles,
-      pMaterial);
-
-  // add it to the scene
-  scene.addChild(particleSystem);
-
-
+ 
+  // Initialize our mesh from our geometry and material.
+  particleSystem = new THREE.ParticleSystem( particles, particlesMaterial );
+  // particleSystem.sortParticles = true;
+  scene.add( particleSystem );
 }
 
 var theta = 0;
@@ -180,7 +177,9 @@ var lineHeight = 0;
 var currentMax = 0;
 var previousMax = 0;
 var x1 = 0, y1 = 0, x2, y2 = 0;
-var petalMeshes = [];
+var petalMeshesLow = [];
+var petalMeshesHigh = [];
+var petalMeshesMedium = [];
 var rotationAngle = 5;
 var highestBeat = 0;
 
@@ -211,7 +210,6 @@ function animate() {
 
     var sum = 0;
 
-
     for (var i = 0; i < beatVals.length; i++) {
       sum += beatVals[i];
     }
@@ -234,7 +232,7 @@ function animate() {
       if(highestBeat < maxValue) {
         highestBeat = maxValue;
       }
-      console.log(highestBeat);
+      // console.log(highestBeat);
 
       minValue = beatVals[0];
 
@@ -249,14 +247,14 @@ function animate() {
 
 
       if(volAvg <= divider) {
-        console.log("low");
-        drawFlower(volAvg,0x997825);
+        // console.log("low");
+        drawFlower(volAvg, 0x997825, petalMeshesLow);
       } else if(volAvg <= divider*2 && volAvg >= divider) {
-        console.log("medium");
-        drawFlower(volAvg,0x000000);
+        // console.log("medium");
+        drawFlower(volAvg, 0xE05434, petalMeshesMedium);
       } else if(volAvg >= divider*2 && volAvg <= BIN_COUNT) {
-        console.log("high");
-        drawFlower(volAvg,0x15776E);
+        // console.log("high");
+        drawFlower(volAvg, 0x15776E, petalMeshesHigh);
       }
 
       // Lines around border
@@ -276,7 +274,7 @@ function animate() {
       var lineMaterial = new THREE.LineBasicMaterial({
         color: 0xffffff,
         blending: THREE.AdditiveBlending,
-        opacity: 0.04,
+        opacity: 0.08,
         transparent: true
       });
       var lineSphere = new THREE.Line(lineSphereGeometry, lineMaterial);
@@ -293,19 +291,54 @@ function animate() {
   y1 = y2;
   
 
-  for (var i = 0; i < triangleMeshes.length; i++) {
+  // for (var i = 0; i < triangleMeshes.length; i++) {
+  //     // Scale triangles based on audio input
+  //     triangleMeshes[i].scale.y = volAvg/30;
+  //     triangleMeshes[i].scale.x = volAvg/30;
+  // }
+
+  for (var i = 0; i < petalMeshesLow.length; i++) {
       // Scale triangles based on audio input
-      triangleMeshes[i].scale.y = volAvg/30;
-      triangleMeshes[i].scale.x = volAvg/30;
+      if(petalMeshesLow[i].scale.y <= 2) {
+        petalMeshesLow[i].scale.y += 0.01;
+        petalMeshesLow[i].scale.x += 0.01;
+      }
+     
+      petalMeshesLow[i].position.z = 500;
+
+      if(petalMeshesLow[i].scale.y <= 2.2 && petalMeshesLow[i].scale.y > 2) {
+        petalMeshesLow[i].scale.y += 0.001;
+        petalMeshesLow[i].scale.x += 0.001;
+      }
   }
 
-  for (var i = 0; i < petalMeshes.length; i++) {
-      // Scale triangles based on audio input
-      if(petalMeshes[i].scale.y <= 1.3) {
-        petalMeshes[i].scale.y += 0.01;
-        petalMeshes[i].scale.x += 0.01;
+  for (var i = 0; i < petalMeshesMedium.length; i++) {
+      if(petalMeshesMedium[i].scale.y <= 2) {
+          petalMeshesMedium[i].scale.y += 0.01;
+          petalMeshesMedium[i].scale.x += 0.01;
       }
-      // petalMeshes[i].rotation.z = Math.sin(i);
+
+      petalMeshesMedium[i].position.z = 300;
+
+      if(petalMeshesMedium[i].scale.y <= 2.2 && petalMeshesMedium[i].scale.y > 2) {
+        petalMeshesMedium[i].scale.y += 0.001;
+        petalMeshesMedium[i].scale.x += 0.001;
+      }
+  }
+
+  for (var i = 0; i < petalMeshesHigh.length; i++) {
+
+      if(petalMeshesHigh[i].scale.y <= 2) {
+        petalMeshesHigh[i].scale.y += 0.01;
+        petalMeshesHigh[i].scale.x += 0.01;
+      }
+
+      petalMeshesHigh[i].position.z = 100;
+
+      if(petalMeshesHigh[i].scale.y <= 2.2 && petalMeshesHigh[i].scale.y > 2) {
+        petalMeshesHigh[i].scale.y += 0.001;
+        petalMeshesHigh[i].scale.x += 0.001;
+      }
   }
 
   for (var i = 0; i < lineSphereMeshes.length; i++) {
@@ -315,30 +348,38 @@ function animate() {
   }
 
 
-  // /***********************************
-  //  * Particle code by Salehen Rahman *
-  //  ***********************************/
+  /***********************************
+   * Particle code by Salehen Rahman *
+   ***********************************/
 
-  // // Update particle positions
-  // for (var i = 0; i < particles.length; i++) {
-  //   // particles.vertices[i].x = Math.sin(theta+i)* window.innerHeight;
-  //   // particles.vertices[i].z = Math.cos(theta+i*5)* window.innerHeight;
+  // Update particle positions
+  for (var i = 0; i < particles.vertices.length; i++) {
+    // particles.vertices[i].x = Math.sin(theta+i)* window.innerHeight;
+    // particles.vertices[i].z = Math.cos(theta+i*5)* window.innerHeight;
 
-  //   // particles.vertices[i].z = volAvg*10;
+    // console.log(particles.vertices[i].x);
+    if(particles.vertices[i].x > 60 || particles.vertices[i].x < -60) {
+      particles.vertices[i].x = 0;
+    } else {
+      particles.vertices[i].x += Math.random()*Math.sin(theta+i)*volAvg/30;
+    }
 
-  //   if (particles.position.z < 1500) {
-  //     particles.position.z -= 200;
-  //   }
-  // }
-  // particles.verticesNeedUpdate = true;
+    if(particles.vertices[i].y > 60 || particles.vertices[i].y < -60) {
+      particles.vertices[i].y = 0;
+    } else {
+      particles.vertices[i].y -= Math.random()*Math.cos(theta+i*5)*volAvg/30;
+    }
 
+  }
+
+  particles.verticesNeedUpdate = true;
 
   camera.lookAt(scene.position);
   renderer.render(scene, camera);
 }
 
 
-function drawFlower(volAvg, petalColor) {
+function drawFlower(volAvg, petalColor, array) {
   var material = new THREE.MeshBasicMaterial({
       color: petalColor,
       // blending: THREE.AdditiveBlending,
@@ -351,23 +392,23 @@ function drawFlower(volAvg, petalColor) {
 
   var petalShape = new THREE.Shape();
   petalShape.moveTo(x1, 0);
-  petalShape.lineTo(x1+volAvg, -20);
-  petalShape.lineTo(x1+(volAvg*5), 0);
-  petalShape.lineTo(x1+volAvg, 20);
+  petalShape.lineTo((x1+volAvg)/2, -10);
+  petalShape.lineTo((x1+(volAvg*5))/2, 0);
+  petalShape.lineTo((x1+volAvg)/2, 10);
   petalShape.lineTo(x1, 0);
 
 
   var petalGeometry = new THREE.ShapeGeometry(petalShape);
   var petalMesh = new THREE.Mesh(petalGeometry, material);
   petalMesh.rotation.z += rotationAngle;
-  petalMeshes.push(petalMesh);
+  array.push(petalMesh);
   scene.add(petalMesh); 
   lineLength += 5; 
   rotationAngle +=5;
 
   if(lineLength >= 100) {
     lineLength = 0;
-    x1 = 50;
+    x1 = 30;
     x2 = lineLength+(volAvg/10);
   } 
 
@@ -377,76 +418,5 @@ function drawFlower(volAvg, petalColor) {
     lineHeight += Math.sin(theta)*volAvg;
   } 
 }
-
-
-
-function drawParticles(volAvg) {
-  var particleMaterial = new THREE.ParticleCanvasMaterial({
-    size: 40,
-    opacity: 0.4,
-    map: THREE.ImageUtils.loadTexture(
-      'orbs.png'
-    ),
-    transparent: true,
-    depthWrite: false,
-  })
-
-  x2 = lineLength + (volAvg/10);
-  y2 = lineHeight + (volAvg/10);
-
-  var particle = new THREE.Particle(particleMaterial);
-  // petalShape.moveTo(x1, 0);
-  // petalShape.lineTo(x1+volAvg, -20);
-  // petalShape.lineTo(x1+(volAvg*5), 0);
-  // petalShape.lineTo(x1+volAvg, 20);
-  // petalShape.lineTo(x1, 0);
-
-
-  var petalGeometry = new THREE.ShapeGeometry(petalShape);
-  var petalMesh = new THREE.Mesh(petalGeometry, material);
-  petalMesh.rotation.z += rotationAngle;
-  petalMeshes.push(petalMesh);
-  scene.add(petalMesh); 
-  lineLength += 5; 
-  rotationAngle +=5;
-
-  if(lineLength >= 100) {
-    lineLength = 0;
-    x1 = 50;
-    x2 = lineLength+(volAvg/10);
-  } 
-
-  if(currentMax <= previousMax) {
-    lineHeight -= Math.sin(theta)*volAvg;
-  } else if (currentMax > previousMax) {
-    lineHeight += Math.sin(theta)*volAvg;
-  } 
-}
-
-
-
-// function drawParticles(volAvg) {
-//   for (var zpos = -1000; zpos < 1000; zpos += 20){
-//     var particleMaterial = new THREE.ParticleCanvasMaterial({
-//         color: 0xffffff,
-//         // blending: THREE.AdditiveBlending,
-//         opacity: 1,
-//         transparent: true
-//     })
-
-//     var particle = new THREE.Particle(particleMaterial);
-//     particle.position.x = Math.random() * 1000 - 500;
-//     particle.position.y = Math.random() * 1000 - 500;
-
-//     particle.position.z = zpos;
-
-//     particle.scale.x = 10;
-//     particle.scale.y = 10;
-
-//     scene.add(particle);
-
-//     // particles.push(particle);
-//   }
-// }
 
 init();
