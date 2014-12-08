@@ -39,7 +39,10 @@ var sceneHeight = window.innerHeight;
 var leftMost = -(sceneWidth / 2);
 var topMost = -(sceneHeight / 2);
 
-// Scene setup
+
+/***********************************
+ * Initialize scene
+ ***********************************/
 function init() {
   freqByteData = new Uint8Array(fft.frequencyBinCount);
   timeByteData = new Uint8Array(fft.frequencyBinCount);
@@ -99,7 +102,9 @@ function init() {
   req.send();
 
 
-  // Create ring geometry
+  /***********************************
+   * Draw central ring
+   ***********************************/
   var loopShape = new THREE.Shape();
   loopShape.absarc( 0, 0, INIT_RADIUS, 0, Math.PI*4, true );
   loopGeom = loopShape.createPointsGeometry(BIN_COUNT/2);
@@ -120,9 +125,8 @@ function init() {
 
 
   /***********************************
-   * Particle code2 by Salehen Rahman *
+   * Wandering particles
    ***********************************/
-
   particles2 = new THREE.Geometry();
 
   // Create new particle material
@@ -153,10 +157,10 @@ function init() {
   var pointCloud = new THREE.PointCloud( particles2, particlesMaterial2 );
   scene.add( pointCloud );
 
-  /***********************************
-   * Particle code by Salehen Rahman *
-   ***********************************/
 
+  /***********************************
+   * Particle cluster
+   ***********************************/
   particles = new THREE.Geometry();
 
   // Create new particle material
@@ -173,8 +177,6 @@ function init() {
  
   // Add the particles to geometry
   for (var i = 0; i < PARTICLES_COUNT; i++) {
- 
-    // Assign 3D coordinates of particles
     var x = 0;
     var y = 0;
     var z = 600;
@@ -203,6 +205,9 @@ var rotationAngle = 5;
 var highestBeat = 0;
 
 
+/***********************************
+ * Animate scene
+ ***********************************/
 function animate() {
   requestAnimationFrame(animate);
 
@@ -214,7 +219,10 @@ function animate() {
   theta += time * 0.1;
   change++;
 
-  // Determine volume
+
+  /***********************************
+   * Create array of volume values
+   ***********************************/
   var volume = 0;
   for (var i = 0; i < BIN_COUNT; i++) {
     volume += freqByteData[i];
@@ -225,22 +233,16 @@ function animate() {
   beatVals.unshift(volAvg);
 
 
+  /***********************************
+   * Check average volume every 9 frames
+   ***********************************/
   if ((change % 9 == 0) && (beatVals.length > 9)) {
     beatVals.length = 9;
     beatVals.pop();
 
-
-    // Draw center ring
-    for(var j = 0; j < BIN_COUNT; j++) {
-      loopGeom.vertices[j].z = timeByteData[j]*2;//stretch by 2
-    }
-    // Link up last segment of ring
-    loopGeom.vertices[BIN_COUNT].z = loopGeom.vertices[0].z;
-    loopGeom.verticesNeedUpdate = true;
-
-
+    // Find average volume
     var sum = 0;
-
+  
     for (var i = 0; i < beatVals.length; i++) {
       sum += beatVals[i];
     }
@@ -248,8 +250,13 @@ function animate() {
     var beatAvg = sum/beatVals.length;
     var start = new Date().getTime();
 
+
+    /***********************************
+    * Dynamic beat detection
+    ***********************************/
     if (beatAvg > beatThresh) {
       
+      // Track highest beat
       maxValue = beatVals[0];
 
       for(var i = 0; i < beatVals.length; i++) {
@@ -259,12 +266,11 @@ function animate() {
       }
       currentMax = maxValue;
 
-      // track highest beat
       if(highestBeat < maxValue) {
         highestBeat = maxValue;
       }
-      // console.log(highestBeat);
 
+      // Track lowest beat
       minValue = beatVals[0];
 
       for(var i = 0; i < beatVals.length; i++) {
@@ -272,16 +278,15 @@ function animate() {
             minValue = beatVals[i];
         }
       }
+
+      // Beat threshold becomes beat average
       beatThresh = beatAvg;
 
+
+      /***********************************
+      * Determine High/Med/Low beat ranges
+      ***********************************/
       var divider = highestBeat/3;
-
-
-      // Modify particle colours
-      particlesHue = (particlesHue + time/10)%1;
-      particlesMaterial.color.setHSL( (particlesHue), 1, 0.7 );
-
-
 
       if(volAvg <= divider) { // low volume
         drawFlower(volAvg, getLowHue(), petalMeshesLow);
@@ -291,7 +296,10 @@ function animate() {
         drawFlower(volAvg, getHighHue(), petalMeshesHigh);
       }
 
-      // Lines around border
+
+      /***********************************
+      * Animate lines around border to the beat
+      ***********************************/
       var lineSphereGeometry = new THREE.Geometry();
 
       var vector = new THREE.Vector3(Math.random() * 2 - 1, Math.random() * 2 -1, Math.random() * 2 - 1);
@@ -305,6 +313,7 @@ function animate() {
 
       lineSphereGeometry.vertices.push(vector2);
 
+      // Create new line material
       var lineMaterial = new THREE.LineBasicMaterial({
         color: 0xffffff,
         opacity: 0.08,
@@ -315,11 +324,30 @@ function animate() {
       scene.add(lineSphere);
     
     } else {
-      beatThresh *= 0.95; // gravity on threshold
+      // Decrease threshold by gravity constant
+      beatThresh *= 0.95;
     }
+
+
+    /***********************************
+    * Update center ring
+    ***********************************/
+    for(var j = 0; j < BIN_COUNT; j++) {
+      loopGeom.vertices[j].z = timeByteData[j]*2;//stretch by 2
+    }
+    // Link up last segment of ring
+    loopGeom.vertices[BIN_COUNT].z = loopGeom.vertices[0].z;
+    loopGeom.verticesNeedUpdate = true;
+
+
+    /***********************************
+    * Modify particle colours
+    ***********************************/
+    particlesHue = (particlesHue + time/10)%1;
+    particlesMaterial.color.setHSL( (particlesHue), 1, 0.7 );
   }
 
-
+  // Scale lines around the border based on the beat
   line.scale.y = volAvg/50;
   line.scale.x = volAvg/50;
 
@@ -327,8 +355,11 @@ function animate() {
   x1 = x2;
   y1 = y2;
 
+
+  /***************************************************
+  * Scale, translate, and rotate low beat petals
+  ***************************************************/
   for (var i = 0; i < petalMeshesLow.length; i++) {
-      // Scale triangles based on audio input
       if(petalMeshesLow[i].scale.y <= 2) {
         petalMeshesLow[i].scale.y += 0.01;
         petalMeshesLow[i].scale.x += 0.01;
@@ -341,9 +372,14 @@ function animate() {
         petalMeshesLow[i].scale.x += 0.001;
       }
 
+      // Rotate based on the beat
       petalMeshesLow[i].rotation.z += 0.001*volAvg/10;
   }
 
+
+  /***************************************************
+  * Scale, translate, and rotate medium beat petals
+  ***************************************************/
   for (var i = 0; i < petalMeshesMedium.length; i++) {
       if(petalMeshesMedium[i].scale.y <= 2) {
           petalMeshesMedium[i].scale.y += 0.01;
@@ -357,9 +393,13 @@ function animate() {
         petalMeshesMedium[i].scale.x += 0.001;
       }
 
+      // Rotate based on the beat
       petalMeshesMedium[i].rotation.z += 0.0008*volAvg/10;
   }
 
+  /***************************************************
+  * Scale, translate, and rotate high beat petals
+  ***************************************************/
   for (var i = 0; i < petalMeshesHigh.length; i++) {
 
       if(petalMeshesHigh[i].scale.y <= 2) {
@@ -374,9 +414,14 @@ function animate() {
         petalMeshesHigh[i].scale.x += 0.001;
       }
 
+      // Rotate based on the beat
       petalMeshesHigh[i].rotation.z += 0.0005*volAvg/10;
   }
 
+
+  /***************************************************
+  * Translate lines around screen
+  ***************************************************/
   for (var i = 0; i < lineSphereMeshes.length; i++) {
       lineSphereMeshes[i].position.z = volAvg*30;
       lineSphereMeshes[i].position.y = Math.sin(theta+i);
@@ -384,11 +429,9 @@ function animate() {
   }
 
 
-  /***********************************
-   * Particle code 2 by Salehen Rahman *
-   ***********************************/
-
-  // Update particle positions
+  /***************************************************
+  * Update wandering particles
+  ***************************************************/
   for (var i = 0; i < particles2.vertices.length; i++) {
     particles2.vertices[i].x = Math.sin(theta+i)* window.innerHeight;
     particles2.vertices[i].z = Math.cos(theta+i*5)* window.innerHeight;
@@ -396,11 +439,9 @@ function animate() {
   particles2.verticesNeedUpdate = true;
 
 
-  /***********************************
-   * Particle code by Salehen Rahman *
-   ***********************************/
-
-  // Update center particle positions
+  /***************************************************
+  * Update central particle cluster
+  ***************************************************/
   for (var i = 0; i < particles.vertices.length; i++) {
 
     if (particles.vertices[i].x > 50 || particles.vertices[i].x < -50) {
@@ -423,11 +464,16 @@ function animate() {
 }
 
 
+/***************************************************
+* Draw flower petals
+***************************************************/
 function drawFlower(volAvg, color, array) {
   var material = new THREE.MeshBasicMaterial({
       opacity: 0.2,
       transparent: true
   })
+
+  // Change petal colour based on volume range
   material.color.setHSL(color, ((Math.random()*30)+80) / 100, ((Math.random()*10)+50) / 100);
 
   x2 = lineLength + (volAvg/10);
@@ -445,6 +491,8 @@ function drawFlower(volAvg, color, array) {
   petalMesh.rotation.z += rotationAngle;
   array.push(petalMesh);
   scene.add(petalMesh); 
+
+  // Rotate and elongate petals
   lineLength += 5; 
   rotationAngle +=5;
 
@@ -461,17 +509,27 @@ function drawFlower(volAvg, color, array) {
   } 
 }
 
-
+/***************************************************
+* Pick a random reddish hue for High beats
+***************************************************/
 function getHighHue() {
   var h = ((Math.random()*20)) / 255; // RED
   return h;
 }
 
+
+/***************************************************
+* Pick a random bluish hue for Medium beats
+***************************************************/
 function getMedHue() {
   var h = ((Math.random()*30)+120) / 255; // BLUE
   return h;
 }
 
+
+/***************************************************
+* Pick a random yellowish hue for Low beats
+***************************************************/
 function getLowHue() {
   var h = ((Math.random()*30)+30) / 255; // YELLOW
   return h;
