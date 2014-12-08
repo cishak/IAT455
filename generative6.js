@@ -166,6 +166,7 @@ function init() {
     map: THREE.ImageUtils.loadTexture(
       'orbs.png'
     ),
+    blending: THREE.AdditiveBlending,
     transparent: true,
     depthWrite: false,
   } );
@@ -339,6 +340,8 @@ function animate() {
         petalMeshesLow[i].scale.y += 0.001;
         petalMeshesLow[i].scale.x += 0.001;
       }
+
+      petalMeshesLow[i].rotation.z += 0.001;
   }
 
   for (var i = 0; i < petalMeshesMedium.length; i++) {
@@ -353,6 +356,8 @@ function animate() {
         petalMeshesMedium[i].scale.y += 0.001;
         petalMeshesMedium[i].scale.x += 0.001;
       }
+
+      petalMeshesMedium[i].rotation.z += 0.0008;
   }
 
   for (var i = 0; i < petalMeshesHigh.length; i++) {
@@ -368,6 +373,8 @@ function animate() {
         petalMeshesHigh[i].scale.y += 0.001;
         petalMeshesHigh[i].scale.x += 0.001;
       }
+
+      petalMeshesHigh[i].rotation.z += 0.0005;
   }
 
   for (var i = 0; i < lineSphereMeshes.length; i++) {
@@ -396,13 +403,13 @@ function animate() {
   // Update center particle positions
   for (var i = 0; i < particles.vertices.length; i++) {
 
-    if (particles.vertices[i].x > 100 || particles.vertices[i].x < -100) {
+    if (particles.vertices[i].x > 60 || particles.vertices[i].x < -60) {
       particles.vertices[i].x = 0;
     } else {
       particles.vertices[i].x += Math.random()*Math.sin(theta+i)*volAvg/30;
     }
 
-    if (particles.vertices[i].y > 100 || particles.vertices[i].y < -100) {
+    if (particles.vertices[i].y > 60 || particles.vertices[i].y < -60) {
       particles.vertices[i].y = 0;
     } else {
       particles.vertices[i].y -= Math.random()*Math.cos(theta+i*5)*volAvg/30;
